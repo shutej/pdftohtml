@@ -282,7 +282,8 @@ int main(int argc, char *argv[]) {
     globalParams->setPSNoText(gTrue);
     psOut = new PSOutputDev(psFileName->getCString(), doc->getXRef(),
 			    doc->getCatalog(), firstPage, lastPage, psModePS);
-    doc->displayPages(psOut, firstPage, lastPage, 72, 0, gFalse);
+    doc->displayPages(psOut, firstPage, lastPage, 
+	    static_cast<int>(72*scale), 0, gFalse);
     delete psOut;
 
     /*sprintf(buf, "%s -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -sOutputFile=%s%%03d.png -g%dx%d -q %s", GHOSTSCRIPT, htmlFileName->getCString(), w, h,
@@ -290,14 +291,16 @@ int main(int argc, char *argv[]) {
     
     GString *gsCmd = new GString(GHOSTSCRIPT);
     GString *tw, *th;
-    gsCmd->append(" -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -sOutputFile=");
+    gsCmd->append(" -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r");
+    gsCmd->append(GString::fromInt(static_cast<int>(72*scale)));
+    gsCmd->append(" -sOutputFile=");
     gsCmd->append("\"");
     gsCmd->append(htmlFileName);
     gsCmd->append("%03d.png\" -g");
-    tw = GString::fromInt(w);
+    tw = GString::fromInt(static_cast<int>(scale*w));
     gsCmd->append(tw);
     gsCmd->append("x");
-    th = GString::fromInt(h);
+    th = GString::fromInt(static_cast<int>(scale*h));
     gsCmd->append(th);
     gsCmd->append(" -q \"");
     gsCmd->append(psFileName);
