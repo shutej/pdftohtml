@@ -116,10 +116,11 @@ int main(int argc, char *argv[]) {
   GString *ownerPW, *userPW;
   Object info;
   char * extsList[] = {"png", "jpeg", "bmp", "pcx", "tiff", "pbm", NULL};
-
+  int result = 0;
+  
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
-  if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
+  if (!ok || argc < 2 || printHelp || printVersion) {
     fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.36a beta", xpdfVersion);
     fprintf(stderr, "%s\n", "Copyright 1999-2003 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "%s\n\n", xpdfCopyright);
@@ -143,7 +144,8 @@ int main(int argc, char *argv[]) {
   if (textEncName[0]) {
     globalParams->setTextEncoding(textEncName);
     if( !globalParams->getTextEncoding() )  {
-	goto error;    
+		result = 2;
+		goto error;    
     }
   }
 
@@ -159,9 +161,10 @@ int main(int argc, char *argv[]) {
     userPW = NULL;
   }
 
-  fileName = new GString(argv[1]);
 
+  fileName = new GString(argv[1]);
   doc = new PDFDoc(fileName, ownerPW, userPW);
+
   if (userPW) {
     delete userPW;
   }
@@ -169,13 +172,15 @@ int main(int argc, char *argv[]) {
     delete ownerPW;
   }
   if (!doc->isOk()) {
-    goto error;
+	result = 4;
+  	goto error;
   }
 
   // check for copy permission
   if (!doc->okToCopy()) {
     error(-1, "Copying of text from this document is not allowed.");
-    goto error;
+	result = 3;
+	goto error;
   }
 
   // construct text file name
@@ -362,7 +367,7 @@ int main(int argc, char *argv[]) {
   Object::memCheck(stderr);
   gMemReport(stderr);
 
-  return 0;
+  return result;
 }
 
 static GString* getInfoString(Dict *infoDict, char *key) {

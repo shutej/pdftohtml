@@ -60,6 +60,14 @@ To produce complex output (most people will want that, probably) :
 	
 	pdftohtml -c file.pdf
 
+Return codes
+------------
+
+0 - success
+1 - invalid argument
+2 - invalid output encoding
+3 - copying text from this document is not allowed
+4 - error opening file (e.g. corrupted file)
 
 Distribution
 ------------
