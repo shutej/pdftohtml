@@ -24,6 +24,7 @@ Usage: pdftohtml [options] <PDF-file> [<html-file>,<xml-file>]
   -i            : ignore images
   -s <float>    : zoom the pdf document (default 1.5)
   -x            : output for XML post-processing
+  -e <encoding>	: select output encoding (e.g. UTF-8)
 "
 }
 
