@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <aconf.h>
+#include <time.h>
 #include "parseargs.h"
 #include "GString.h"
 #include "gmem.h"
@@ -51,6 +52,7 @@ static char userPassword[33] = "";
 static GBool printVersion = gFalse;
 
 static GString* getInfoString(Dict *infoDict, char *key);
+static GString* getInfoDate(Dict *infoDict, char *key);
 
 static char textEncName[128] = "";
 
@@ -100,6 +102,7 @@ int main(int argc, char *argv[]) {
   PDFDoc *doc = NULL;
   GString *fileName = NULL;
   GString *docTitle = NULL;
+  GString *author = NULL, *keywords = NULL, *date = NULL;
   GString *htmlFileName = NULL;
   GString *psFileName = NULL;
   HtmlOutputDev *htmlOut = NULL;
@@ -226,13 +229,35 @@ int main(int argc, char *argv[]) {
   doc->getDocInfo(&info);
   if (info.isDict()) {
     docTitle = getInfoString(info.getDict(), "Title");
+    author = getInfoString(info.getDict(), "Author");
+    keywords = getInfoString(info.getDict(), "Keywords");
+    date = getInfoDate(info.getDict(), "ModDate");
+    if( !date )
+	date = getInfoDate(info.getDict(), "CreationDate");
   }
   info.free();
   if( !docTitle ) docTitle = new GString(htmlFileName);
 
   // write text file
-  htmlOut = new HtmlOutputDev(htmlFileName->getCString(), docTitle, rawOrder);
+  htmlOut = new HtmlOutputDev(htmlFileName->getCString(), 
+	  docTitle->getCString(), 
+	  author ? author->getCString() : NULL,
+	  keywords ? keywords->getCString() : NULL, 
+	  date ? date->getCString() : NULL,
+	  rawOrder);
   delete docTitle;
+  if( author )
+  {   
+      delete author;
+  }
+  if( keywords )
+  {
+      delete keywords;
+  }
+  if( date )
+  {
+      delete date;
+  }
 
   if (htmlOut->isOk())  
     doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
@@ -263,10 +288,10 @@ int main(int argc, char *argv[]) {
     gsCmd->append("\"");
     gsCmd->append(htmlFileName);
     gsCmd->append("%03d.png\" -g");
-    tw = GString::IntToStr(w);
+    tw = GString::fromInt(w);
     gsCmd->append(tw);
     gsCmd->append("x");
-    th = GString::IntToStr(h);
+    th = GString::fromInt(h);
     gsCmd->append(th);
     gsCmd->append(" -q \"");
     gsCmd->append(psFileName);
@@ -310,3 +335,42 @@ static GString* getInfoString(Dict *infoDict, char *key) {
   obj.free();
   return s1;
 }
+
+static GString* getInfoDate(Dict *infoDict, char *key) {
+  Object obj;
+  char *s;
+  int year, mon, day, hour, min, sec;
+  struct tm tmStruct;
+  GString *result = NULL;
+  char buf[256];
+
+  if (infoDict->lookup(key, &obj)->isString()) {
+    s = obj.getString()->getCString();
+    if (s[0] == 'D' && s[1] == ':') {
+      s += 2;
+    }
+    if (sscanf(s, "%4d%2d%2d%2d%2d%2d",
+               &year, &mon, &day, &hour, &min, &sec) == 6) {
+      tmStruct.tm_year = year - 1900;
+      tmStruct.tm_mon = mon - 1;
+      tmStruct.tm_mday = day;
+      tmStruct.tm_hour = hour;
+      tmStruct.tm_min = min;
+      tmStruct.tm_sec = sec;
+      tmStruct.tm_wday = -1;
+      tmStruct.tm_yday = -1;
+      tmStruct.tm_isdst = -1;
+      mktime(&tmStruct); // compute the tm_wday and tm_yday fields
+      if (strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S+00:00", &tmStruct)) {
+	result = new GString(buf);
+      } else {
+        result = new GString(s);
+      }
+    } else {
+      result = new GString(s);
+    }
+  }
+  obj.free();
+  return result;
+}
+

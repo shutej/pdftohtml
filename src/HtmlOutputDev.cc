@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <math.h>
 #include "GString.h"
+#include "GList.h"
 #include "gmem.h"
 #include "config.h"
 #include "Error.h"
@@ -511,7 +512,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   
   if( !noframes )
   {
-      GString* pgNum=GString::IntToStr(page);
+      GString* pgNum=GString::fromInt(page);
       tmp = new GString(DocName);
       tmp->append('-')->append(pgNum)->append(".html");
       delete pgNum;
@@ -523,40 +524,39 @@ void HtmlPage::dumpComplex(FILE *file, int page){
       } 
       delete tmp;
 
-      fprintf(pageFile,"%s\n<html>\n<head>\n<title>Page %d</title>\n\n",
+      fprintf(pageFile,"%s\n<HTML>\n<HEAD>\n<TITLE>Page %d</TITLE>\n\n",
 	      DOCTYPE, page);
-      fprintf(pageFile, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
-      fprintf(pageFile, "%s\n", GENERATOR);
+      fprintf(pageFile, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
   }
   else 
   {
       pageFile = file;
       fprintf(pageFile,"<!-- Page %d -->\n", page);
-      fprintf(pageFile,"<div style=\"position:relative;\">\n");
+      fprintf(pageFile,"<DIV style=\"position:relative;\">\n");
   } 
 
   tmp=basename(DocName);
    
-  fputs("<style type=\"text/css\">\n<!--\n",pageFile);
+  fputs("<STYLE type=\"text/css\">\n<!--\n",pageFile);
   for(int i=fontsPageMarker;i!=fonts->size();i++) {
     GString *fontCSStyle = fonts->CSStyle(i);
     fprintf(pageFile,"\t%s\n",fontCSStyle->getCString());
     delete fontCSStyle;
   }
  
-  fputs("-->\n</style>\n",pageFile);
+  fputs("-->\n</STYLE>\n",pageFile);
   
   if( !noframes )
   {  
-      fputs("</head>\n<body vlink=\"blue\" link=\"blue\">\n",pageFile); 
+      fputs("</HEAD>\n<BODY vlink=\"blue\" link=\"blue\">\n",pageFile); 
   }
   
   if( !ignore ) {
-    //fputs("<div style=\"position:absolute;top:0;left:0\">",pageFile);
+    //fputs("<DIV style=\"position:absolute;top:0;left:0\">",pageFile);
     fprintf(pageFile,
-	    "<img width=\"%d\" height=\"%d\" src=\"%s%03d.png\" alt=\"background image\">",
+	    "<IMG width=\"%d\" height=\"%d\" src=\"%s%03d.png\" alt=\"background image\">",
 	    pageWidth,pageHeight,tmp->getCString(),page);
-    //fputs("</div>",pageFile);
+    //fputs("</DIV>",pageFile);
   }
   
   delete tmp;
@@ -566,7 +566,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
     if (tmp1->htext){
       str=new GString(tmp1->htext);
       fprintf(pageFile,
-	      "<div style=\"position:absolute;top:%d;left:%d\">",
+	      "<DIV style=\"position:absolute;top:%d;left:%d\">",
 	      xoutRound(tmp1->yMin),
 	      xoutRound(tmp1->xMin));
       fputs("<nobr>",pageFile); 
@@ -578,18 +578,18 @@ void HtmlPage::dumpComplex(FILE *file, int page){
       
       delete str;      
       delete str1;
-      fputs("</nobr></div>\n",pageFile);
+      fputs("</nobr></DIV>\n",pageFile);
     }
   }
   
   if( !noframes )
   {
-      fputs("</body>\n</html>\n",pageFile);
+      fputs("</BODY>\n</HTML>\n",pageFile);
       fclose(pageFile);
   }
   else
   {
-      fputs("</div>\n", pageFile);
+      fputs("</DIV>\n", pageFile);
   }
 }
 
@@ -603,10 +603,10 @@ void HtmlPage::dump(FILE *f) {
     if (!xml) dumpComplex(f, nump);  
   }
   else{
-    fprintf(f,"<a name=%d></a>",nump);
+    fprintf(f,"<A name=%d></a>",nump);
     GString* fName=basename(DocName); 
     for (int i=1;i<HtmlOutputDev::imgNum;i++)
-      fprintf(f,"<img src=\"%s-%d_%d.jpg\"><br>\n",fName->getCString(),nump,i);
+      fprintf(f,"<IMG src=\"%s-%d_%d.jpg\"><br>\n",fName->getCString(),nump,i);
     HtmlOutputDev::imgNum=1;
     delete fName;
 
@@ -661,6 +661,32 @@ void HtmlPage::setDocName(char *fname){
 }
 
 //------------------------------------------------------------------------
+// HtmlMetaVar
+//------------------------------------------------------------------------
+
+HtmlMetaVar::HtmlMetaVar(char *_name, char *_content)
+{
+    name = new GString(_name);
+    content = new GString(_content);
+}
+
+HtmlMetaVar::~HtmlMetaVar()
+{
+   delete name;
+   delete content;
+} 
+    
+GString* HtmlMetaVar::toString()	
+{
+    GString *result = new GString("<META name=\"");
+    result->append(name);
+    result->append("\" content=\"");
+    result->append(content);
+    result->append("\">"); 
+    return result;
+}
+
+//------------------------------------------------------------------------
 // HtmlOutputDev
 //------------------------------------------------------------------------
 
@@ -698,31 +724,32 @@ void HtmlOutputDev::doFrame(){
     
   fName=basename(Docname);
   fputs(DOCTYPE_FRAMES, f);
-  fputs("<html>",f);
-  fputs("<head>",f);
-  fprintf(f,"<title>%s</title>",docTitle->getCString());//fName->getCString());
+  fputs("\n<HTML>",f);
+  fputs("\n<HEAD>",f);
+  fprintf(f,"\n<TITLE>%s</TITLE>",docTitle->getCString());
   htmlEncoding = mapEncodingToHtml(globalParams->getTextEncodingName());
-  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
+  fprintf(f, "\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
   delete htmlEncoding;
-  fprintf(f, "%s\n", GENERATOR);
-  fprintf(f, "</head>\n");
-  fputs("<frameset cols=\" 100,* \"\n>",f);
-  fprintf(f,"<frame name=\"links\" src=\"%s_ind.html\">\n",fName->getCString());
-  fputs("<frame name=\"rechts\" src=",f); 
+  dumpMetaVars(f);
+  fprintf(f, "</HEAD>\n");
+  fputs("<FRAMESET cols=\"100,*\">\n",f);
+  fprintf(f,"<FRAME name=\"links\" src=\"%s_ind.html\">\n",fName->getCString());
+  fputs("<FRAME name=\"contents\" src=",f); 
   if (mode) 
       fprintf(f,"\"%s-1.html\"",fName->getCString());
   else
       fprintf(f,"\"%ss.html\"",fName->getCString());
   
-  fputs(">\n</frameset>\n</html>\n",f);
+  fputs(">\n</FRAMESET>\n</HTML>\n",f);
  
   delete fName;
   fclose(f);  
 
 }
 
-HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title, 
-			     GBool rawOrder) {
+HtmlOutputDev::HtmlOutputDev(char *fileName, char *title, 
+	char *author, char *keywords, char *date,
+	GBool rawOrder) {
   f=NULL;
   docTitle = new GString(title);
   pages = NULL;
@@ -736,6 +763,12 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
   needClose = gFalse;
   pages = new HtmlPage(rawOrder);
 
+  glMetaVars = new GList();
+  glMetaVars->append(new HtmlMetaVar("generator", "pdftohtml 0.34a"));  
+  if( author ) glMetaVars->append(new HtmlMetaVar("author", author));  
+  if( keywords ) glMetaVars->append(new HtmlMetaVar("keywords", keywords));  
+  if( date ) glMetaVars->append(new HtmlMetaVar("date", date));  
+  
   maxPageWidth = 0;
   maxPageHeight = 0;
 
@@ -755,7 +788,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
      }
      delete left;
      fputs(DOCTYPE, f);
-     fputs("<html>\n<head>\n<title></title>\n</head>\n<body>\n",f);
+     fputs("<HTML>\n<HEAD>\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n",f);
      
      if(!mode){
        GString* right=new GString(fileName);
@@ -768,7 +801,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
        }
        delete right;
        fputs(DOCTYPE, page);
-       fputs("<html>\n<head>\n<title></title>\n</head>\n<body>\n",page);
+       fputs("<HTML>\n<HEAD>\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n",page);
      }
   }
 
@@ -790,12 +823,12 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
       fputs("<!DOCTYPE pdf2xml SYSTEM \"pdf2xml.dtd\">\n\n", page);
       fputs("<pdf2xml>\n",page);
     } else {
-      fprintf(page,"%s\n<html>\n<head>\n<title>%s</title>\n",
+      fprintf(page,"%s\n<HTML>\n<HEAD>\n<TITLE>%s</TITLE>\n",
 	      DOCTYPE, docTitle->getCString());
-      fprintf(page, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
-      fprintf(page, "%s\n", GENERATOR);
-      fprintf(page,"</head>\n");
-      fprintf(page,"<body bgcolor=\"#A0A0A0\" vlink=\"blue\" link=\"blue\">\n");
+      fprintf(page, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
+      dumpMetaVars(page);
+      fprintf(page,"</HEAD>\n");
+      fprintf(page,"<BODY bgcolor=\"#A0A0A0\" vlink=\"blue\" link=\"blue\">\n");
     }
   }    
 }
@@ -814,8 +847,10 @@ HtmlOutputDev::~HtmlOutputDev() {
     delete Docname;
     delete docTitle;
 
+    deleteGList(glMetaVars, HtmlMetaVar);
+
     if (f){
-      fputs("</body>\n</html>\n",f);  
+      fputs("</BODY>\n</HTML>\n",f);  
       fclose(f);
     }
     if (xml) {
@@ -823,7 +858,7 @@ HtmlOutputDev::~HtmlOutputDev() {
       fclose(page);
     } else
     if (!mode||xml){ 
-      fputs("</body>\n</html>\n",page);  
+      fputs("</BODY>\n</HTML>\n",page);  
       fclose(page);
     }
     if (pages)
@@ -855,10 +890,10 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
   if(!noframes){
     if (f){
       if (mode)
-	fprintf(f,"<a href=\"%s-%d.html\"",str->getCString(),pageNum);
+	fprintf(f,"<A href=\"%s-%d.html\"",str->getCString(),pageNum);
       else 
-	fprintf(f,"<a href=\"%ss.html#%d\"",str->getCString(),pageNum);
-      fprintf(f," target=\"rechts\" >Page %d</a>\n",pageNum);
+	fprintf(f,"<A href=\"%ss.html#%d\"",str->getCString(),pageNum);
+      fprintf(f," target=\"contents\" >Page %d</a>\n",pageNum);
     }
   }
 
@@ -970,8 +1005,8 @@ void HtmlOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str,
   if (dumpJPEG  && str->getKind() == strDCT) {
     GString *fName=new GString(Docname);
     fName->append("-");
-    GString *pgNum=GString::IntToStr(pageNum);
-    GString *imgnum=GString::IntToStr(imgNum);
+    GString *pgNum=GString::fromInt(pageNum);
+    GString *imgnum=GString::fromInt(imgNum);
     // open the image file
     fName->append(pgNum)->append("_")->append(imgnum)->append(".jpg");
     ++imgNum;
@@ -1068,8 +1103,8 @@ void HtmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   if (dumpJPEG && str->getKind() == strDCT) {
     GString *fName=new GString(Docname);
     fName->append("-");
-    GString *pgNum= GString::IntToStr(pageNum);
-    GString *imgnum= GString::IntToStr(imgNum);  
+    GString *pgNum= GString::fromInt(pageNum);
+    GString *imgnum= GString::fromInt(imgNum);  
     
     // open the image file
     fName->append(pgNum)->append("_")->append(imgnum)->append(".jpg");
@@ -1118,7 +1153,7 @@ void HtmlOutputDev::drawLink(Link* link,Catalog *cat){
   delete _dest;
 }
 
-GString *HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
+GString* HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
   char *p;
   switch(link->getAction()->getKind()) {
   case actionGoTo:{ 
@@ -1139,7 +1174,7 @@ GString *HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
       
       delete dest;
 
-      GString *str=GString::IntToStr(page);
+      GString *str=GString::fromInt(page);
       if (mode) file->append("-");
       else{ 
 	if (!noframes) file->append("s");
@@ -1176,7 +1211,7 @@ GString *HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
 	  file->append(".html");
 	}
 	file->append('#');
-	file->append(GString::IntToStr(page));
+	file->append(GString::fromInt(page));
       }
     }
     if (printCommands) printf("filename %s\n",file->getCString());
@@ -1204,5 +1239,18 @@ GString *HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
   }
   default:
     return new GString();
+  }
+}
+
+void HtmlOutputDev::dumpMetaVars(FILE *file)
+{
+  GString *var;
+
+  for(int i = 0; i < glMetaVars->getLength(); i++)
+  {
+     HtmlMetaVar *t = (HtmlMetaVar*)glMetaVars->get(i); 
+     var = t->toString(); 
+     fprintf(file, "%s\n", var->getCString());
+     delete var;
   }
 }

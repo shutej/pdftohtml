@@ -14,8 +14,7 @@ srcdir = .
 GOOSRCDIR = $(srcdir)/../goo
 GOOLIBDIR = ../goo
 
-CXXFLAGS += -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) 
-#-g -DDEBUG_MEM
+CXXFLAGS += $(DEBUG) -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) 
 
 CC ?= cc
 CXX ?= c++

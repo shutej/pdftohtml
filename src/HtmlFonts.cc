@@ -246,7 +246,7 @@ int HtmlFontAccu::AddFont(const HtmlFont& font){
 // get CSS font name for font #i 
 GString* HtmlFontAccu::getCSStyle(int i, GString* content){
   GString *tmp;
-  GString *iStr=GString::IntToStr(i);
+  GString *iStr=GString::fromInt(i);
   
   if (!xml) {
     tmp = new GString("<span class=\"ft");
@@ -266,12 +266,12 @@ GString* HtmlFontAccu::getCSStyle(int i, GString* content){
 // get CSS font definition for font #i 
 GString* HtmlFontAccu::CSStyle(int i){
    GString *tmp=new GString();
-   GString *iStr=GString::IntToStr(i);
+   GString *iStr=GString::fromInt(i);
 
    GVector<HtmlFont>::iterator g=accu->begin();
    g+=i;
    HtmlFont font=*g;
-   GString *Size=GString::IntToStr(font.getSize());
+   GString *Size=GString::fromInt(font.getSize());
    GString *colorStr=font.getColor().toString();
    GString *fontName=font.getFontName();
    GString *lSize;
@@ -283,7 +283,7 @@ GString* HtmlFontAccu::CSStyle(int i){
      tmp->append(Size);
      if( font.getLineSize() != -1 )
      {
-	 lSize = GString::IntToStr(font.getLineSize());
+	 lSize = GString::fromInt(font.getLineSize());
 	 tmp->append("px;line-height:");
 	 tmp->append(lSize);
 	 delete lSize;

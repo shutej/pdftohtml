@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include "gtypes.h"
+#include "GList.h"
 #include "GfxFont.h"
 #include "OutputDev.h"
 #include "HtmlLinks.h"
@@ -32,7 +33,6 @@
 
 #define xoutRound(x) ((int)(x + 0.5))
 
-#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.34a\">"
 #define DOCTYPE "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
 #define DOCTYPE_FRAMES "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\"\n\"http://www.w3.org/TR/html4/frameset.dtd\">"
 
@@ -157,6 +157,22 @@ private:
 };
 
 //------------------------------------------------------------------------
+// HtmlMetaVar
+//------------------------------------------------------------------------
+class HtmlMetaVar {
+public:
+    HtmlMetaVar(char *_name, char *_content);
+    ~HtmlMetaVar();    
+    
+    GString* toString();	
+
+private:
+
+    GString *name;
+    GString *content;
+};
+
+//------------------------------------------------------------------------
 // HtmlOutputDev
 //------------------------------------------------------------------------
 
@@ -169,7 +185,11 @@ public:
   // 8-bit ISO Latin-1.  <useASCII7> should also be set for Japanese
   // (EUC-JP) text.  If <rawOrder> is true, the text is kept in content
   // stream order.
-  HtmlOutputDev(char *fileName, GString *title, GBool rawOrder);
+  HtmlOutputDev(char *fileName, char *title, 
+	  char *author,
+	  char *keywords,
+	  char *date,
+	  GBool rawOrder);
 
   // Destructor.
   virtual ~HtmlOutputDev();
@@ -231,6 +251,7 @@ private:
 
   GString* mapEncodingToHtml(GString* encoding);
   GString* getLinkDest(Link *link,Catalog *catalog);
+  void dumpMetaVars(FILE *);
   void doFrame();
   FILE *f;			// text file
   FILE *page;                   // html file
@@ -247,6 +268,7 @@ private:
   static int imgNum;
   GString *Docname;
   GString *docTitle;
+  GList *glMetaVars;
   friend class HtmlPage;
 };
 

@@ -87,8 +87,6 @@ public:
   int cmp(const char *sA) { return strcmp(s, sA); }
   int cmpN(const char *sA, int n) { return strncmp(s, sA, n); }
 
-  static GString* IntToStr(int); 
-
 private:
 
   int length;

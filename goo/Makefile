@@ -11,9 +11,9 @@ SHELL = /bin/sh
 
 srcdir = .
 
-CFLAGS += -O2 -DHAVE_CONFIG_H -I.. -I$(srcdir) 
+CFLAGS += $(DEBUG) -O2 -DHAVE_CONFIG_H -I.. -I$(srcdir) 
 #-g -DDEBUG_MEM
-CXXFLAGS += -g -O2 -DHAVE_CONFIG_H -I.. -I$(srcdir) 
+CXXFLAGS += $(DEBUG) -O2 -DHAVE_CONFIG_H -I.. -I$(srcdir) 
 #-g -DDEBUG_MEM
 
 CC ?= cc
@@ -29,6 +29,12 @@ LIBPREFIX = lib
 
 .cc.o:
 	$(CXX) $(CXXFLAGS) -c $<
+
+.SUFFIXES: .c
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
 
 #------------------------------------------------------------------------
 

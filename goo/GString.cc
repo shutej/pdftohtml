@@ -229,23 +229,3 @@ GString *GString::lowerCase() {
   }
   return this;
 }
-
-GString* GString::IntToStr(int value){
-   GString *str=new GString(); 
-   int val=value;
-   char c;
-   if (value==0) {
-     str->append("0");
-     return str;
-   }
-   while(val){
-     int h= val % 10;
-     val=val/10;
-     c='0'+h;
-     str->insert(0,c);
-   }  
-   if (value<0) str->insert(0,'-');
-   
-   return str;
-
-}
