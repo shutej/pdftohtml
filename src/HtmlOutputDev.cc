@@ -329,7 +329,8 @@ void HtmlPage::coalesce() {
 	   (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
 	 (!rawOrder && str2->yMin < str1->yMax)) &&
 	d > -0.5 * space && d < space) ||
-       (!noMerge && vertSpace < 0.5 * space && addLineBreak)) &&
+       (!noMerge && vertSpace >= 0 && vertSpace < 0.5 * space && 
+	addLineBreak)) &&
 	(hfont1->isEqualIgnoreBold(*hfont2))
  	) {
 	n = str1->len + str2->len;
@@ -347,7 +348,7 @@ void HtmlPage::coalesce() {
 					str1->size * sizeof(double));
       if (addSpace) {
 	str1->text[str1->len] = 0x20;
-	str1->htext->append(" \n");
+	str1->htext->append(" ");
 	str1->xRight[str1->len] = str2->xMin;
 	++str1->len;
       }
