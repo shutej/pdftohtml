@@ -72,3 +72,7 @@ pdftohtml 0.35
 -fixed bug with page numbering
 -fixed bug with collapsing text for '-c -noframes -i'
 -updated Xpdf to 2.01 (security fix among others)
+
+pdftohtml 0.36 (beta)
+=====================
+-added support for different Ghostscript output devices (-dev)

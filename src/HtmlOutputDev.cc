@@ -37,7 +37,6 @@ int HtmlOutputDev::imgNum=1;
 
 extern double scale;
 extern GBool complexMode;
-extern char extension[5];
 extern GBool ignore;
 extern GBool printCommands;
 extern GBool printHtml;
@@ -154,7 +153,7 @@ void HtmlString::endString()
 // HtmlPage
 //------------------------------------------------------------------------
 
-HtmlPage::HtmlPage(GBool rawOrder) {
+HtmlPage::HtmlPage(GBool rawOrder, char *imgExtVal) {
   this->rawOrder = rawOrder;
   curStr = NULL;
   yxStrings = NULL;
@@ -167,6 +166,7 @@ HtmlPage::HtmlPage(GBool rawOrder) {
   fontsPageMarker = 0;
   DocName=NULL;
   firstPage = -1;
+  imgExt = new GString(imgExtVal);
 }
 
 HtmlPage::~HtmlPage() {
@@ -174,7 +174,7 @@ HtmlPage::~HtmlPage() {
   if (DocName) delete DocName;
   if (fonts) delete fonts;
   if (links) delete links;
-  
+  if (imgExt) delete imgExt;  
 }
 
 void HtmlPage::updateFont(GfxState *state) {
@@ -398,10 +398,10 @@ void HtmlPage::coalesce() {
       str1->xRight = (double *)grealloc(str1->xRight,
 					str1->size * sizeof(double));
       if (addSpace) {
-	str1->text[str1->len] = 0x20;
-	str1->htext->append(" ");
-	str1->xRight[str1->len] = str2->xMin;
-	++str1->len;
+		  str1->text[str1->len] = 0x20;
+		  str1->htext->append(" ");
+		  str1->xRight[str1->len] = str2->xMin;
+		  ++str1->len;
       }
       if (addLineBreak) {
 	  str1->text[str1->len] = '\n';
@@ -596,11 +596,10 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   
   if( !ignore ) 
   {
-    //fputs("<DIV style=\"position:absolute;top:0;left:0\">",pageFile);
     fprintf(pageFile,
-	    "<IMG width=\"%d\" height=\"%d\" src=\"%s%03d.png\" alt=\"background image\">\n",
-	    pageWidth,pageHeight,tmp->getCString(),(page-firstPage+1));
-    //fputs("</DIV>",pageFile);
+	    "<IMG width=\"%d\" height=\"%d\" src=\"%s%03d.%s\" alt=\"background image\">\n",
+	    pageWidth, pageHeight, tmp->getCString(), 
+		(page-firstPage+1), imgExt->getCString());
   }
   
   delete tmp;
@@ -788,6 +787,7 @@ void HtmlOutputDev::doFrame(int firstPage){
 
 HtmlOutputDev::HtmlOutputDev(char *fileName, char *title, 
 	char *author, char *keywords, char *subject, char *date,
+	char *extension,
 	GBool rawOrder, int firstPage) 
 {
   char *htmlEncoding;
@@ -804,10 +804,10 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
   //pageNum=firstPage;
   // open file
   needClose = gFalse;
-  pages = new HtmlPage(rawOrder);
-
+  pages = new HtmlPage(rawOrder, extension);
+  
   glMetaVars = new GList();
-  glMetaVars->append(new HtmlMetaVar("generator", "pdftohtml 0.35beta"));  
+  glMetaVars->append(new HtmlMetaVar("generator", "pdftohtml 0.36beta"));  
   if( author ) glMetaVars->append(new HtmlMetaVar("author", author));  
   if( keywords ) glMetaVars->append(new HtmlMetaVar("keywords", keywords));  
   if( date ) glMetaVars->append(new HtmlMetaVar("date", date));  

@@ -38,7 +38,7 @@ static GBool printHelp = gFalse;
 GBool printHtml = gFalse;
 GBool complexMode=gFalse;
 GBool ignore=gFalse;
-char extension[5]=".png";
+//char extension[5]=".png";
 double scale=1.5;
 GBool noframes=gFalse;
 GBool stout=gFalse;
@@ -49,6 +49,7 @@ GBool showHidden = gFalse;
 GBool noMerge = gFalse;
 static char ownerPassword[33] = "";
 static char userPassword[33] = "";
+static char gsDevice[33] = "png16m";
 static GBool printVersion = gFalse;
 
 static GString* getInfoString(Dict *infoDict, char *key);
@@ -89,6 +90,8 @@ static ArgDesc argDesc[] = {
    "do not merge paragraphs"},   
   {"-enc",    argString,   textEncName,    sizeof(textEncName),
    "output text encoding name"},
+  {"-dev",    argString,   gsDevice,       sizeof(gsDevice),
+   "output device name for Ghostscript (png16m, jpeg etc)"},
   {"-v",      argFlag,     &printVersion,  0,
    "print copyright and version info"},
   {"-opw",    argString,   ownerPassword,  sizeof(ownerPassword),
@@ -109,13 +112,15 @@ int main(int argc, char *argv[]) {
   PSOutputDev *psOut = NULL;
   GBool ok;
   char *p;
+  char extension[16] = "png";
   GString *ownerPW, *userPW;
   Object info;
+  char * extsList[] = {"png", "jpeg", "bmp", "pcx", "tiff", "pbm", NULL};
 
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.35", xpdfVersion);
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.36beta", xpdfVersion);
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "%s\n\n", xpdfCopyright);
     if (!printVersion) {
@@ -238,6 +243,16 @@ int main(int argc, char *argv[]) {
   info.free();
   if( !docTitle ) docTitle = new GString(htmlFileName);
 
+  /* determine extensions of output backgroun images */
+  for(int i = 0; extsList[i]; i++)
+  {
+	  if( strstr(gsDevice, extsList[i]) != (char *) NULL )
+	  {
+		  strncpy(extension, extsList[i], sizeof(extension));
+		  break;
+	  }
+  }
+
   // write text file
   htmlOut = new HtmlOutputDev(htmlFileName->getCString(), 
 	  docTitle->getCString(), 
@@ -245,6 +260,7 @@ int main(int argc, char *argv[]) {
 	  keywords ? keywords->getCString() : NULL, 
           subject ? subject->getCString() : NULL, 
 	  date ? date->getCString() : NULL,
+	  extension,
 	  rawOrder, firstPage);
   delete docTitle;
   if( author )
@@ -290,13 +306,17 @@ int main(int argc, char *argv[]) {
     
     GString *gsCmd = new GString(GHOSTSCRIPT);
     GString *tw, *th, *sc;
-    gsCmd->append(" -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r");
+    gsCmd->append(" -sDEVICE=");
+	gsCmd->append(gsDevice);
+	gsCmd->append(" -dBATCH -dNOPROMPT -dNOPAUSE -r");
     sc = GString::fromInt(static_cast<int>(72*scale));
     gsCmd->append(sc);
     gsCmd->append(" -sOutputFile=");
     gsCmd->append("\"");
     gsCmd->append(htmlFileName);
-    gsCmd->append("%03d.png\" -g");
+    gsCmd->append("%03d.");
+	gsCmd->append(extension);
+	gsCmd->append("\" -g");
     tw = GString::fromInt(static_cast<int>(scale*w));
     gsCmd->append(tw);
     gsCmd->append("x");

@@ -92,7 +92,7 @@ class HtmlPage {
 public:
 
   // Constructor.
-  HtmlPage(GBool rawOrder);
+  HtmlPage(GBool rawOrder, char *imgExtVal);
 
   // Destructor.
   ~HtmlPage();
@@ -153,7 +153,8 @@ private:
   HtmlFontAccu *fonts;
   HtmlLinks *links; 
   
-  GString* DocName;
+  GString *DocName;
+  GString *imgExt;
   int pageWidth;
   int pageHeight;
   static int pgNum;
@@ -196,6 +197,7 @@ public:
 	  char *keywords,
 	  char *subject,
 	  char *date,
+	  char *extension,
 	  GBool rawOrder,
 	  int firstPage = 1);
 
