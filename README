@@ -5,8 +5,8 @@ Pdftohtml was developed by Gueorgui Ovtcharov and Rainer Dorsch. It is
 based and benefits a lot from Derek Noonburg's xpdf package.
 Currently pdftohtml is maintained by Mikhail Kruk (meshko@cs.brandeis.edu)
 
-version 0.35
-January 12th, 2003
+version 0.36
+June 24th, 2003
 
 Email: pdftohtml-general@lists.sourceforge.net
 WWW:   http://sourceforge.net/projects/pdftohtml
