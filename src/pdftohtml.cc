@@ -36,7 +36,7 @@ static GBool rawOrder = gTrue;
 GBool printCommands = gTrue;
 static GBool printHelp = gFalse;
 GBool printHtml = gFalse;
-GBool mode=gFalse;
+GBool complexMode=gFalse;
 GBool ignore=gFalse;
 char extension[5]=".png";
 double scale=1.5;
@@ -71,7 +71,7 @@ static ArgDesc argDesc[] = {
    "print usage information"},
   {"-p",      argFlag,     &printHtml,     0,
    "exchange .pdf links by .html"}, 
-  {"-c",      argFlag,     &mode,          0,
+  {"-c",      argFlag,     &complexMode,          0,
    "generate complex document"},
   {"-i",      argFlag,     &ignore,        0,
    "ignore images"},
@@ -203,19 +203,19 @@ int main(int argc, char *argv[]) {
    if (scale>3.0) scale=3.0;
    if (scale<0.5) scale=0.5;
    
-   if (mode) {
+   if (complexMode) {
      //noframes=gFalse;
      stout=gFalse;
    } 
 
    if (stout) {
      noframes=gTrue;
-     mode=gFalse;
+     complexMode=gFalse;
    }
 
    if (xml)
    { 
-       mode = gTrue;
+       complexMode = gTrue;
        noframes = gTrue;
        noMerge = gTrue;
    }
@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
   if (htmlOut->isOk())  
     doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
   
-  if( mode && !xml && !ignore ) {
+  if( complexMode && !xml && !ignore ) {
     int h=xoutRound(htmlOut->getPageHeight()/scale);
     int w=xoutRound(htmlOut->getPageWidth()/scale);
     //int h=xoutRound(doc->getPageHeight(1)/scale);
@@ -302,11 +302,11 @@ int main(int argc, char *argv[]) {
     gsCmd->append(" -q \"");
     gsCmd->append(psFileName);
     gsCmd->append("\"");
-    // printf("running: %s\n", gsCmd->getCString());
+    printf("running: %s\n", gsCmd->getCString());
     if( !executeCommand(gsCmd->getCString()) && !errQuiet) {
       error(-1, "Failed to launch Ghostscript!\n");
     }
-    unlink(psFileName->getCString());
+    //unlink(psFileName->getCString());
     delete tw;
     delete th;
     delete gsCmd;

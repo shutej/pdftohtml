@@ -35,7 +35,7 @@ int HtmlPage::pgNum=0;
 int HtmlOutputDev::imgNum=1;
 
 extern double scale;
-extern GBool mode;
+extern GBool complexMode;
 extern char extension[5];
 extern GBool ignore;
 extern GBool printCommands;
@@ -537,7 +537,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   {
       pageFile = file;
       fprintf(pageFile,"<!-- Page %d -->\n", page);
-      fprintf(pageFile,"<a name=\"page_%d\"></a>\n", page); 
+      fprintf(pageFile,"<a name=\"%d\"></a>\n", page); 
       fprintf(pageFile,"<DIV style=\"position:relative;\">\n");
   } 
 
@@ -604,7 +604,7 @@ void HtmlPage::dump(FILE *f) {
   static int nump=0;
 
   nump++;
-  if (mode){
+  if (complexMode){
     if (xml) dumpAsXML(f,nump);
     if (!xml) dumpComplex(f, nump);  
   }
@@ -741,7 +741,7 @@ void HtmlOutputDev::doFrame(){
   fputs("<FRAMESET cols=\"100,*\">\n",f);
   fprintf(f,"<FRAME name=\"links\" src=\"%s_ind.html\">\n",fName->getCString());
   fputs("<FRAME name=\"contents\" src=",f); 
-  if (mode) 
+  if (complexMode) 
       fprintf(f,"\"%s-1.html\"",fName->getCString());
   else
       fprintf(f,"\"%ss.html\"",fName->getCString());
@@ -800,7 +800,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
      fputs(DOCTYPE, f);
      fputs("<HTML>\n<HEAD>\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n",f);
      
-     if(!mode){
+     if(!complexMode){
        GString* right=new GString(fileName);
        right->append("s.html");
 
@@ -871,7 +871,7 @@ HtmlOutputDev::~HtmlOutputDev() {
       fputs("</pdf2xml>\n",page);  
       fclose(page);
     } else
-    if (!mode||xml){ 
+    if (!complexMode||xml){ 
       fputs("</BODY>\n</HTML>\n",page);  
       fclose(page);
     }
@@ -903,7 +903,7 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
   pages->clear(); 
   if(!noframes){
     if (f){
-      if (mode)
+      if (complexMode)
 	fprintf(f,"<A href=\"%s-%d.html\"",str->getCString(),pageNum);
       else 
 	fprintf(f,"<A href=\"%ss.html#%d\"",str->getCString(),pageNum);
@@ -963,7 +963,7 @@ void HtmlOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str,
 
   int i, j;
   
-  if (ignore||mode) {
+  if (ignore||complexMode) {
     OutputDev::drawImageMask(state, ref, str, width, height, invert, inlineImg);
     return;
   }
@@ -1054,7 +1054,7 @@ void HtmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
 
   int i, j;
    
-  if (ignore||mode) {
+  if (ignore||complexMode) {
     OutputDev::drawImage(state, ref, str, width, height, colorMap, 
 			 maskColors, inlineImg);
     return;
@@ -1193,17 +1193,30 @@ GString* HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
 	      delete dest;
 
 	      GString *str=GString::fromInt(page);
-	      if (mode)
-	      { 
-		  file->append("-");
+	      /* 		complex 	simple
+	       	frames		file-4.html	files.html#4
+		noframes	file.html#4	file.html#4
+	       */
+	      if (noframes)
+	      {
+		  file->append(".html#");
+		  file->append(str);
 	      }
 	      else
-	      { 
-		  if (!noframes) file->append("s");
-		  file->append(".html#");
+	      {
+	      	if( complexMode ) 
+		{
+		    file->append("-");
+		    file->append(str);
+		    file->append(".html");
+		}
+		else
+		{
+		    file->append("s.html#");
+		    file->append(str);
+		}
 	      }
-	      file->append(str);
-	      if (mode) file->append(".html");
+
 	      if (printCommands) printf(" link to page %d ",page);
 	      delete str;
 	      return file;

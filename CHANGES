@@ -66,6 +66,6 @@ pdftohtml 0.34
 pdftohtml 0.34a
 ===============
 -somewhat better HTML 4.01 compliance
--better looking HTML (capitalized where needed)
 -added meta author, keywords and date
 -added mechanism for correct charsets
+-fixed bug with links pointing nowhere for '-c -noframes'
