@@ -58,4 +58,5 @@ pdftohtml 0.33b
 =============
 -command line option to extract hidden text
 -parts of hrefs (links) are joined together (just like <b> and <i>)
--paragraphs joined together   
+-paragraphs joined together
+-fixed a crash

@@ -220,9 +220,9 @@ int main(int argc, char *argv[]) {
   doc->getDocInfo(&info);
   if (info.isDict()) {
     docTitle = getInfoString(info.getDict(), "Title");
-    if( !docTitle ) docTitle = new GString(htmlFileName);
   }
   info.free();
+  if( !docTitle ) docTitle = new GString(htmlFileName);
 
   // write text file
   htmlOut = new HtmlOutputDev(htmlFileName->getCString(), docTitle, rawOrder);

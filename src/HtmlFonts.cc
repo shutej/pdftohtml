@@ -25,7 +25,6 @@
      {" "          ,            "Times"    },
 };
 
-int HtmlFont::leak=0;
 #define xoutRound(x) ((int)(x + 0.5))
 extern GBool xml;
 
@@ -67,8 +66,6 @@ GString *HtmlFontColor::toString() const{
 } 
 
 HtmlFont::HtmlFont(GString* ftname,int _size, GfxRGB rgb){
-  leak++;
-
   //if (col) color=HtmlFontColor(col); 
   //else color=HtmlFontColor();
   color=HtmlFontColor(rgb);
@@ -106,7 +103,6 @@ HtmlFont::HtmlFont(GString* ftname,int _size, GfxRGB rgb){
 }
  
 HtmlFont::HtmlFont(const HtmlFont& x){
-   leak++;
    size=x.size;
    lineSize=x.lineSize;
    italic=x.italic;
@@ -118,7 +114,6 @@ HtmlFont::HtmlFont(const HtmlFont& x){
 
 
 HtmlFont::~HtmlFont(){
-  leak--;
   if (FontName) delete FontName;
 }
 

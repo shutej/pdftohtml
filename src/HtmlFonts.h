@@ -60,7 +60,6 @@ public:
    GBool isEqual(const HtmlFont& x) const;
    GBool isEqualIgnoreBold(const HtmlFont& x) const;
    static GString* simple(HtmlFont *font, Unicode *content, int uLen);
-   static int leak;
 };
 
 class HtmlFontAccu{
