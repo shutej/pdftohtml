@@ -376,6 +376,10 @@ void HtmlPage::coalesce() {
 	str1->htext->insert(0,"<i>",3);
     }
   }
+  if( hfont1.isBold() )
+    str1->htext->append("</b>",4);
+  if( hfont1.isItalic() )
+    str1->htext->append("</i>",4);
 }
 
 void HtmlPage::dumpAsXML(FILE* f,int page){  
