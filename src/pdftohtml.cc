@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/\n", "0.33b");
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/\n", "0.34");
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "based on Xpdf version %s\n", xpdfVersion);
     fprintf(stderr, "%s\n\n", xpdfCopyright);

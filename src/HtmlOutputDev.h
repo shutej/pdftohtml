@@ -32,7 +32,7 @@
 
 #define xoutRound(x) ((int)(x + 0.5))
 
-#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.33b\">"
+#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.34\">"
 
 class GfxState;
 class GString;
