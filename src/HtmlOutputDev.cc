@@ -76,7 +76,7 @@ HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
     GfxRGB rgb;
     state->getFillRGB(&rgb);
     GString *name = state->getFont()->getName();
-    if (!name) name = new GString("default");
+    if (!name) name = HtmlFont::getDefaultFont(); //new GString("default");
     HtmlFont hfont=HtmlFont(name, static_cast<int>(fontSize-1), rgb);
     fontpos=fonts->AddFont(hfont);
   } else {

@@ -133,6 +133,7 @@ HtmlFont& HtmlFont::operator=(const HtmlFont& x){
 
 void HtmlFont::clear(){
   if(DefaultFont) delete DefaultFont;
+  DefaultFont = NULL;
 }
 
 

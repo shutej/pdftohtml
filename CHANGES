@@ -52,4 +52,4 @@ pdftohtml 0.33
 pdftohtml 0.33a
 ===============
 -bug fixes
--join multiple <b></b> together
+-join multiple <b></b>'s and <i></i>'s together

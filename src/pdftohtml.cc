@@ -94,7 +94,7 @@ static ArgDesc argDesc[] = {
 };
 
 int main(int argc, char *argv[]) {
-  PDFDoc *doc;
+  PDFDoc *doc = NULL;
   GString *fileName = NULL;
   GString *docTitle = NULL;
   GString *htmlFileName = NULL;
@@ -219,10 +219,11 @@ int main(int argc, char *argv[]) {
     docTitle = getInfoString(info.getDict(), "Title");
     if( !docTitle ) docTitle = new GString(htmlFileName);
   }
-
+  info.free();
 
   // write text file
   htmlOut = new HtmlOutputDev(htmlFileName->getCString(), docTitle, rawOrder);
+  delete docTitle;
 
   if (htmlOut->isOk())  
     doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
@@ -272,12 +273,14 @@ int main(int argc, char *argv[]) {
   delete htmlOut;
 
   // clean up
-  delete htmlFileName;
  err2:
-  delete doc;
  err1:
-  delete globalParams;
+  if(doc) delete doc;
+  if(globalParams) delete globalParams;
 
+  if(htmlFileName) delete htmlFileName;
+  HtmlFont::clear();
+  
   // check for memory leaks
   Object::memCheck(stderr);
   gMemReport(stderr);
