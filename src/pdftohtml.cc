@@ -253,6 +253,8 @@ int main(int argc, char *argv[]) {
 	  }
   }
 
+  rawOrder = complexMode; // todo: figure out what exactly rawOrder do :)
+
   // write text file
   htmlOut = new HtmlOutputDev(htmlFileName->getCString(), 
 	  docTitle->getCString(), 

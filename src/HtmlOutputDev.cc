@@ -83,7 +83,7 @@ HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
     GString *name = state->getFont()->getName();
     if (!name) name = HtmlFont::getDefaultFont(); //new GString("default");
     HtmlFont hfont=HtmlFont(name, static_cast<int>(fontSize-1), rgb);
-    fontpos=fonts->AddFont(hfont);
+    fontpos = fonts->AddFont(hfont);
   } else {
     // this means that the PDF file draws text without a current font,
     // which should never happen
@@ -328,15 +328,15 @@ void HtmlPage::endString() {
 void HtmlPage::coalesce() {
   HtmlString *str1, *str2;
   HtmlFont *hfont1, *hfont2;
-  double space, d, vertSpace;
+  double space, horSpace, vertSpace, vertOverlap;
   GBool addSpace, addLineBreak;
   int n, i;
   double curX, curY;
 
 #if 0 //~ for debugging
   for (str1 = yxStrings; str1; str1 = str1->yxNext) {
-    printf("x=%3d..%3d  y=%3d..%3d  size=%2d '",
-	   (int)str1->xMin, (int)str1->xMax, (int)str1->yMin, (int)str1->yMax,
+    printf("x=%f..%f  y=%f..%f  size=%2d '",
+	   str1->xMin, str1->xMax, str1->yMin, str1->yMax,
 	   (int)(str1->yMax - str1->yMin));
     for (i = 0; i < str1->len; ++i) {
       fputc(str1->text[i] & 0xff, stdout);
@@ -349,6 +349,46 @@ void HtmlPage::coalesce() {
 
   if( !str1 ) return;
 
+  //----- discard duplicated text (fake boldface, drop shadows)
+  if( !complexMode )
+  {	/* if not in complex mode get rid of duplicate strings */
+	HtmlString *str3;
+	GBool found;
+  	while (str1)
+	{
+		double size = str1->yMax - str1->yMin;
+		double xLimit = str1->xMin + size * 0.2;
+		found = gFalse;
+		for (str2 = str1, str3 = str1->yxNext;
+			str3 && str3->xMin < xLimit;
+			str2 = str3, str3 = str2->yxNext)
+		{
+			if (str3->len == str1->len &&
+				!memcmp(str3->text, str1->text, str1->len * sizeof(Unicode)) &&
+				fabs(str3->yMin - str1->yMin) < size * 0.2 &&
+				fabs(str3->yMax - str1->yMax) < size * 0.2 &&
+				fabs(str3->xMax - str1->xMax) < size * 0.2)
+			{
+				found = gTrue;
+				printf("found!\n");
+				break;
+			}
+		}
+		if (found)
+		{
+			str2->xyNext = str3->xyNext;
+			str2->yxNext = str3->yxNext;
+			delete str3;
+		}
+		else
+		{
+			str1 = str1->yxNext;
+		}
+	}		
+  }	/*- !complexMode */
+  
+  str1 = yxStrings;
+  
   hfont1 = getFont(str1);
   if( hfont1->isBold() )
     str1->htext->insert(0,"<b>",3);
@@ -364,28 +404,43 @@ void HtmlPage::coalesce() {
   while (str1 && (str2 = str1->yxNext)) {
     hfont2 = getFont(str2);
     space = str1->yMax - str1->yMin;
-    d = str2->xMin - str1->xMax;
+    horSpace = str2->xMin - str1->xMax;
     addLineBreak = !noMerge && (fabs(str1->xMin - str2->xMin) < 0.4);
     vertSpace = str2->yMin - str1->yMax;
 
-
-
 //printf("coalesce %d %d %f? ", str1->dir, str2->dir, d);
 
-    if (((((rawOrder &&
-	  ((str2->yMin >= str1->yMin && str2->yMin <= str1->yMax) ||
-	   (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
-	 (!rawOrder && str2->yMin < str1->yMax)) &&
-	d > -0.5 * space && d < space) ||
-       (vertSpace >= 0 && vertSpace < 0.5 * space && 
-	addLineBreak)) &&
-	(hfont1->isEqualIgnoreBold(*hfont2)) &&
+    if (str2->yMin >= str1->yMin && str2->yMin <= str1->yMax)
+    {
+	vertOverlap = str1->yMax - str2->yMin;
+    } else
+    if (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax)
+    {
+	vertOverlap = str2->yMax - str1->yMin;
+    } else
+    {
+    	vertOverlap = 0;
+    } 
+    
+    if (
+	(
+	 (
+	  (
+	   (rawOrder && vertOverlap > 0.5 * space) 
+	   ||
+	   (!rawOrder && str2->yMin < str1->yMax)
+	  ) &&
+	  (horSpace > -0.5 * space && horSpace < space)
+	 ) ||
+       	 (vertSpace >= 0 && vertSpace < 0.5 * space && addLineBreak)
+	) &&
+	(!complexMode || (hfont1->isEqualIgnoreBold(*hfont2))) && // in complex mode fonts must be the same, in other modes fonts do not metter
 	str1->dir == str2->dir // text direction the same
- 	) 
+       ) 
     {
 //      printf("yes\n");
       n = str1->len + str2->len;
-      if ((addSpace = d > 0.1 * space)) {
+      if ((addSpace = horSpace > 0.1 * space)) {
         ++n;
       }
       if (addLineBreak) {

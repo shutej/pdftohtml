@@ -76,3 +76,6 @@ pdftohtml 0.35
 pdftohtml 0.36 (beta)
 =====================
 -added support for different Ghostscript output devices (-dev)
+-updated Xpdf to 2.02 (security fix)
+-a couple of fixes and tweaks for better output
+-ported duplicate lines elimination from pdftotext (does not affect complex mode)
