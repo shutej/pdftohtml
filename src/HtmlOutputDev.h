@@ -24,6 +24,13 @@
 #include "Link.h"
 #include "Catalog.h"
 
+
+#ifdef WIN32
+#  define SLASH '\\'
+#else
+#  define SLASH '/'
+#endif
+
 class GfxState;
 class GString;
 //------------------------------------------------------------------------

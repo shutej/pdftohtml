@@ -2,8 +2,6 @@
 
 
 
-
-
 HtmlLink::HtmlLink(const HtmlLink& x){
   Xmin=x.Xmin;
   Ymin=x.Ymin;

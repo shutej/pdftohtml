@@ -22,7 +22,7 @@
 #include "config.h"
 #include "Error.h"
 #include "GfxState.h"
-//#include "GlobalParams.h"
+#include "GlobalParams.h"
 //#include "UnicodeMap.h"
 //#include "FontEncoding.h"
 #include "HtmlOutputDev.h"
@@ -186,13 +186,6 @@ extern GBool xml;
 //------------------------------------------------------------------------
 // HtmlString
 //------------------------------------------------------------------------
-
-#ifdef WIN32
-#  define SLASH '\\'
-#else
-#  define SLASH '/'
-#endif
-
 
 GString* basename(GString* str){
   
@@ -1112,7 +1105,7 @@ void HtmlOutputDev::endPage() {
   pages->coalesce();
   pages->dump(page);
   if(!noframes&&!xml) fputs("<br>", f);
-  if(!stout) printf("Page-%d\n",(pageNum));
+  if(!stout && !globalParams->getErrQuiet()) printf("Page-%d\n",(pageNum));
   pageNum++ ;
 }
 
@@ -1303,6 +1296,8 @@ if (ignore||mode) return;
   }
 
    
+  if( !globalParams->getErrQuiet() )
+    printf("image stream of kind %d\n", str->getKind());
   // dump JPEG file
   if (dumpJPEG && str->getKind() == strDCT) {
     GString *fName=new GString(Docname);

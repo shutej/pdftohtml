@@ -104,6 +104,7 @@ int main(int argc, char *argv[]) {
 
   if (errQuiet) {
     globalParams->setErrQuiet(errQuiet);
+    printCommands = gFalse; // I'm not 100% what is the differecne between them
   }
 
 
