@@ -144,6 +144,7 @@ HtmlPage::HtmlPage(GBool rawOrder) {
   links=new HtmlLinks();
   pageWidth=0;
   pageHeight=0;
+  fontsPageMarker = 0;
   DocName=NULL;
 }
 
@@ -478,8 +479,8 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
   fprintf(f, "<page number=\"%d\" position=\"absolute\"", page);
   fprintf(f," top=\"0\" left=\"0\" height=\"%d\" width=\"%d\">\n", pageHeight,pageWidth);
     
-  for(int i=0;i!=fonts->size();i++) {
-    GString *fontCSStyle = fonts->CSStyle(i, page);
+  for(int i=fontsPageMarker;i < fonts->size();i++) {
+    GString *fontCSStyle = fonts->CSStyle(i);
     fprintf(f,"\t%s\n",fontCSStyle->getCString());
     delete fontCSStyle;
   }
@@ -492,7 +493,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
       fprintf(f,"width=\"%d\" height=\"%d\" ",xoutRound(tmp->xMax-tmp->xMin),xoutRound(tmp->yMax-tmp->yMin));
       fprintf(f,"font=\"%d-%d\">", page, tmp->fontpos);
       if (tmp->fontpos!=-1){
-	str1=fonts->getCSStyle(tmp->fontpos, page, str);
+	str1=fonts->getCSStyle(tmp->fontpos, str);
       }
       fputs(str1->getCString(),f);
       delete str;
@@ -536,8 +537,8 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   tmp=basename(DocName);
    
   fputs("<style type=\"text/css\">\n<!--\n",pageFile);
-  for(int i=0;i!=fonts->size();i++) {
-    GString *fontCSStyle = fonts->CSStyle(i, page);
+  for(int i=fontsPageMarker;i!=fonts->size();i++) {
+    GString *fontCSStyle = fonts->CSStyle(i);
     fprintf(pageFile,"\t%s\n",fontCSStyle->getCString());
     delete fontCSStyle;
   }
@@ -569,7 +570,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
 	      xoutRound(tmp1->xMin));
       fputs("<nobr>",pageFile); 
       if (tmp1->fontpos!=-1){
-	str1=fonts->getCSStyle(tmp1->fontpos, page, str);  
+	str1=fonts->getCSStyle(tmp1->fontpos, str);  
       }
       //printf("%s\n", str1->getCString());
       fputs(str1->getCString(),pageFile);
@@ -641,6 +642,11 @@ void HtmlPage::clear() {
   {
       delete fonts;
       fonts=new HtmlFontAccu();
+      fontsPageMarker = 0;
+  }
+  else
+  {
+      fontsPageMarker = fonts->size();
   }
 
   delete links;

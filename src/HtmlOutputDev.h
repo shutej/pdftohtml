@@ -115,10 +115,6 @@ public:
   
 
   // new functions
- 
-
-  
- 
   void AddLink(const HtmlLink& x){
     links->AddLink(x);
   }
@@ -144,7 +140,9 @@ private:
   void setDocName(char* fname);
   void dumpAsXML(FILE* f,int page);
   void dumpComplex(FILE* f, int page);
- 
+
+  // marks the position of the fonts that belong to current page (for noframes)
+  int fontsPageMarker; 
   HtmlFontAccu *fonts;
   HtmlLinks *links; 
   

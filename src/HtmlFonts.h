@@ -75,8 +75,8 @@ public:
     g+=i;  
     return g;
   } 
-  GString* getCSStyle (int i, int page, GString* content);
-  GString* CSStyle(int i, int page);
+  GString* getCSStyle (int i, GString* content);
+  GString* CSStyle(int i);
   int size() const {return accu->size();}
   
 };  

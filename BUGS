@@ -19,8 +19,5 @@ with text, but rather keep it in HtmlString. Makes more sense.
 
 * command line options for directory where to put extracted images
 
-* command line option to keep complex output in one page (this only possible
-when we stop using ghostscript and one huge image)
-
 * move all the GBool settings for pdf to html conversion into GlobalParams for
 consistency
