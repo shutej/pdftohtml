@@ -1,0 +1,18 @@
+PRIMARY AUTHORS AND CONTRIBUTORS TO PDFTOHTML:
+
+Original authors:
+Gueorgui Ovtcharov
+Rainer Dorsch <http://www.ra.informatik.uni-stuttgart.de/~rainer/>
+
+Author of the Xpdf program on which pdftohtml is based: 
+Derek B. Noonburg <derekn@foolabs.com>
+
+Current maitainer:
+Mikhail Kruk <meshko@cs.brandeis.edu>
+
+Contributors:
+Claus Hulstrom and Zoltan Hawryluk - improvements in the generated HTML code
+Anjo Anjewierden - XML output
+Adjamir Galvão <adjamir@hotmail.com> - improvements of XML output
+Søren Boll Overgaard <boll@fork.dk> - FreeBSD port, Debian package
+
