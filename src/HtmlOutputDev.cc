@@ -10,7 +10,9 @@
 //
 //========================================================================
 
-#ifdef __GNUC__
+#include <aconf.h>
+
+#ifdef USE_GCC_PRAGMAS
 #pragma implementation
 #endif
 
@@ -1284,7 +1286,7 @@ GString* HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
   {
       case actionGoTo:
 	  { 
-	  GString* file=basename(Docname);
+	  GString* file;
 	  int page=1;
 	  LinkGoTo *ha=(LinkGoTo *)link->getAction();
 	  LinkDest *dest=NULL;
@@ -1298,34 +1300,35 @@ GString* HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
 		  page=catalog->findPage(pageref.num,pageref.gen);
 	      }
 	      else {
-		  page=dest->getPageNum();
+		  	page=dest->getPageNum();
 	      }
 
 	      delete dest;
 
 	      GString *str=GString::fromInt(page);
-	      /* 		complex 	simple
-	       	frames		file-4.html	files.html#4
-		noframes	file.html#4	file.html#4
+	      /* 					complex 	simple
+		   * 		frames		file-4.html	files.html#4
+		   * 		noframes	file.html#4	file.html#4
 	       */
 	      if (noframes)
 	      {
-		  file->append(".html#");
-		  file->append(str);
+			file = new GString("#");
+			file->append(str);
 	      }
 	      else
 	      {
-	      	if( complexMode ) 
-		{
-		    file->append("-");
-		    file->append(str);
-		    file->append(".html");
-		}
-		else
-		{
-		    file->append("s.html#");
-		    file->append(str);
-		}
+			file = basename(Docname);
+			if( complexMode ) 
+			{
+		    	file->append("-");
+		    	file->append(str);
+				file->append(".html");
+			}
+			else
+			{
+				file->append("s.html#");
+				file->append(str);
+			}
 	      }
 
 	      if (printCommands) printf(" link to page %d ",page);

@@ -10,7 +10,9 @@
 #ifndef HTMLOUTPUTDEV_H
 #define HTMLOUTPUTDEV_H
 
-#ifdef __GNUC__
+#include <aconf.h>
+
+#ifdef USE_GCC_PRAGMAS
 #pragma interface
 #endif
 
