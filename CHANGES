@@ -34,3 +34,9 @@ pdftohtml 0.31 (test version)
 
 pdftohtml 0.32 (*test* version)
 -updated to use xpdf 1.0
+
+pdftohtml 0.32b
+-experimental ability to specify output encoding (UTF-8 might work)
+-ability to specify user/master password
+-fixed core dump on documents with type 3 fonts only
+-fixed bug with inline images not being handled properly

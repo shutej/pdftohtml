@@ -9,7 +9,7 @@ RM=/bin/rm
 
 
 function printhelp (){
-echo "pdftohtml version 0.32a
+echo "pdftohtml version 0.32b
 Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch
 Usage: pdftohtml [options] <PDF-file> [<html-file>,<xml-file>]
   -f <int>      : first page to convert
