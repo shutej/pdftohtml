@@ -128,7 +128,8 @@ public:
   
   void conv();
 private:
-  
+  HtmlFont getFont(HtmlString *hStr) { return fonts->Get(hStr->fontpos); }
+
   double fontSize;		// current font size
   GBool rawOrder;		// keep strings in content stream order
 
@@ -218,6 +219,7 @@ public:
   int getPageHeight() { return maxPageHeight; }
 
 private:
+
   GString* getLinkDest(Link *link,Catalog *catalog);
   void doFrame();
   FILE *f;			// text file

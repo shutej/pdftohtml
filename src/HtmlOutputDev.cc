@@ -187,17 +187,17 @@ void HtmlPage::beginString(GfxState *state, GString *s) {
 
 void HtmlPage::conv(){
   HtmlString *tmp;
-  GString* str;
+
   int k=0;
   HtmlFont h;
   for(tmp=yxStrings;tmp;tmp=tmp->yxNext){
      int pos=tmp->fontpos;
      //  printf("%d\n",pos);
      h=fonts->Get(pos);
-     str=h.getFullName();
+
      if (tmp->htext) delete tmp->htext; 
-     tmp->htext=HtmlFont::simple(str,tmp->text,tmp->len);
-     delete str; 
+     tmp->htext=HtmlFont::simple(h,tmp->text,tmp->len);
+
      if (links->inLink(tmp->xMin,tmp->yMin,tmp->xMax,tmp->yMax,k)){
        GString *t=tmp->htext;
        tmp->htext=links->getLink(k)->Link(tmp->htext);
@@ -285,6 +285,7 @@ void HtmlPage::endString() {
 
 void HtmlPage::coalesce() {
   HtmlString *str1, *str2;
+  HtmlFont hfont1, hfont2;
   double space, d;
   GBool addSpace;
   int n, i;
@@ -302,7 +303,13 @@ void HtmlPage::coalesce() {
   printf("\n------------------------------------------------------------\n\n");
 #endif
   str1 = yxStrings;
+  hfont1 = getFont(str1);
+  if( hfont1.isBold() )
+    str1->htext->insert(0,"<b>",3);
+  if( hfont1.isItalic() )
+    str1->htext->insert(0,"<i>",3);
   while (str1 && (str2 = str1->yxNext)) {
+    hfont2 = getFont(str2);
     space = str1->yMax - str1->yMin;
     d = str2->xMin - str1->xMax;
     if (((rawOrder &&
@@ -310,8 +317,8 @@ void HtmlPage::coalesce() {
 	   (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
 	 (!rawOrder && str2->yMin < str1->yMax)) &&
 	d > -0.5 * space && d < space &&
-	(str1->fontpos==str2->fontpos)
-	) {
+	(hfont1.isEqualIgnoreBold(hfont2))
+ 	) {
       n = str1->len + str2->len;
       if ((addSpace = d > 0.1 * space)) {
 	++n;
@@ -332,7 +339,19 @@ void HtmlPage::coalesce() {
 	str1->xRight[str1->len] = str2->xRight[i];
 	++str1->len;
       }
+
+      /* fix <i> and <b> if str1 and str2 differ */
+      if( hfont1.isBold() && !hfont2.isBold() )
+	str1->htext->append("</b>", 4);
+      if( hfont1.isItalic() && !hfont2.isItalic() )
+	str1->htext->append("</i>", 4);
+      if( !hfont1.isBold() && hfont2.isBold() )
+	str1->htext->append("<b>", 3);
+      if( !hfont1.isItalic() && hfont2.isItalic() )
+	str1->htext->append("<i>", 3);
+
       str1->htext->append(str2->htext);
+      hfont1 = hfont2;
       if (str2->xMax > str1->xMax) {
 	str1->xMax = str2->xMax;
       }
@@ -342,7 +361,16 @@ void HtmlPage::coalesce() {
       str1->yxNext = str2->yxNext;
       delete str2;
     } else {
+      if( hfont1.isBold() )
+	str1->htext->append("</b>",4);
+      if( hfont1.isItalic() )
+	str1->htext->append("</i>",4);
       str1 = str2;
+      hfont1 = hfont2;
+      if( hfont1.isBold() )
+	str1->htext->insert(0,"<b>",3);
+      if( hfont1.isItalic() )
+	str1->htext->insert(0,"<i>",3);
     }
   }
 }

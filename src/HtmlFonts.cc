@@ -23,7 +23,6 @@
      {"Times-Italic",           "Times"    },
      {"Times-Roman",            "Times"    },
      {" "          ,            "Times"    },
-
 };
 
 int HtmlFont::leak=0;
@@ -138,13 +137,24 @@ void HtmlFont::clear(){
 
 
 
-// tuta, todo
+/*
+  This function is used to compare font uniquily for insertion into
+  the list of all encountered fonts
+*/
 GBool HtmlFont::isEqual(const HtmlFont& x) const{
   return ((size==x.size) &&
-	  (pos==x.pos) && 
-	  //	  (!strcmp(fonts[pos].name, fonts[x.pos].name)) &&
+	  (pos==x.pos) &&  // this comparison covers italic/bold
 	  (color.isEqual(x.getColor())));
-  // (bold==x.bold)&&(italic==x.italic))
+}
+
+/*
+  This one is used to decide whether two pieces of text can be joined together
+  and therefore we don't care about bold/italics properties
+*/
+GBool HtmlFont::isEqualIgnoreBold(const HtmlFont& x) const{
+  return ((size==x.size) &&
+	  (!strcmp(fonts[pos].name, fonts[x.pos].name)) &&
+	  (color.isEqual(x.getColor())));
 }
 
 GString* HtmlFont::getFontName(){
@@ -201,29 +211,18 @@ GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) {
   return tmp;
 }
 
-GString* HtmlFont::simple(GString* ftname, Unicode* content, int uLen){
-  GString *cont=HtmlFilter (content, uLen); // tuta (content->getCString());
-  GString *fontname=new GString(ftname);
-  
-  GBool b=gFalse;
-  GBool i=gFalse;
-  
-  if (fontname){
-  
-  if (strstr(fontname->lowerCase()->getCString(),"bold")) b=gTrue;
- 
-  if (strstr(fontname->lowerCase()->getCString(),"italic")||
-      strstr(fontname->lowerCase()->getCString(),"oblique")) i=gTrue;
-  }
-  if (b) {
+GString* HtmlFont::simple(HtmlFont font, Unicode* content, int uLen){
+  GString *cont=HtmlFilter (content, uLen); 
+
+  /*if (font.isBold()) {
     cont->insert(0,"<b>",3);
     cont->append("</b>",4);
   }
-  if (i) {
+  if (font.isItalic()) {
     cont->insert(0,"<i>",3);
     cont->append("</i>",4);
-  } 
-  delete fontname;
+    } */
+
   return cont;
 }
 

@@ -4,8 +4,8 @@ pdftohtml
 Pdftohtml was developed by Gueorgui Ovtcharov and Rainer Dorsch. It is
 based and benefits a lot from Derek Noonburg's xpdf package.
 
-version 0.32b
-March 17th, 2002
+version 0.33
+April 20th, 2002
 
 Email: pdftohtml-general@lists.sourceforge.net
 WWW:   http://sourceforge.net/projects/pdftohtml
@@ -17,19 +17,11 @@ The PDF data structures, operators, and specification are
 copyright 1995 Adobe Systems Inc.
 
 
-What is pdftohtml.bin?
+What is pdftohtml?
 ----------------------
 
-pdftohtml.bin converts files from the Portable Document Format (PDF) files
+pdftohtml converts files from the Portable Document Format (PDF) files
 into the HTML file format.
-
-
-What is pdftohtml?
------------------
-
-Pdftohtml is a shell script that executes pdftohtml.bin and converts all
-images.
-
 
 How to use pdftohtml?
 ---------------------
@@ -40,15 +32,13 @@ files are saved. If the -c option is specified, one PNG image is generated
 for each page.
 
 
-How to compile pdftohtml.bin ?
+How to compile pdftohtml ?
 ------------------------------
 
 To compile pdftohtml.bin, type : 
    
-    make
+    gmake
 
-In order to use pdftohtml script you will need to edit it to match your
-installation path.
 This version of pdftohtml was tested on Linux, FreeBSD, Solaris, MacOS X 
 and Windows
 

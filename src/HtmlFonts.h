@@ -55,7 +55,8 @@ public:
    static GString* getDefaultFont();
    static void setDefaultFont(GString* defaultFont);
    GBool isEqual(const HtmlFont& x) const;
-   static GString* simple(GString* fontname, Unicode *content, int uLen);
+   GBool isEqualIgnoreBold(const HtmlFont& x) const;
+   static GString* simple(HtmlFont font, Unicode *content, int uLen);
    static int leak;
 };
 
