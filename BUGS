@@ -1,5 +1,7 @@
 Known bugs (and TODOs) in pdftohtml 0.34
 
+* encoding not stored in xml output
+
 * Complex output will not work correctly when there are pages of different size
 (large background image will be screwed up)
 I think that in order to fix this I will have to keep some info about each page

@@ -63,9 +63,10 @@ pdftohtml 0.34
 -updated Xpdf to 1.01
 -can produce noframes (single html file) output for complex mode
 
-pdftohtml 0.34a
+pdftohtml 0.35
 ===============
 -somewhat better HTML 4.01 compliance
 -added meta author, keywords and date
 -added mechanism for correct charsets
 -fixed bug with links pointing nowhere for '-c -noframes'
+-fixed bug with page numbering

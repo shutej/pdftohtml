@@ -121,7 +121,7 @@ public:
     links->AddLink(x);
   }
 
- void dump(FILE *f);
+ void dump(FILE *f, int pageNum);
 
   // Clear the page.
   void clear();
@@ -152,6 +152,7 @@ private:
   int pageWidth;
   int pageHeight;
   static int pgNum;
+  int firstPage;                // used to begin the numeration of pages
 
   friend class HtmlOutputDev;
 };
@@ -190,7 +191,8 @@ public:
 	  char *keywords,
 	  char *subject,
 	  char *date,
-	  GBool rawOrder);
+	  GBool rawOrder,
+	  int firstPage = 1);
 
   // Destructor.
   virtual ~HtmlOutputDev();
@@ -253,7 +255,7 @@ private:
   static GString* mapEncodingToHtml(GString* encoding);
   GString* getLinkDest(Link *link,Catalog *catalog);
   void dumpMetaVars(FILE *);
-  void doFrame();
+  void doFrame(int firstPage);
   FILE *f;			// text file
   FILE *page;                   // html file
   //FILE *tin;                    // image log file

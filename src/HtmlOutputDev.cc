@@ -147,6 +147,7 @@ HtmlPage::HtmlPage(GBool rawOrder) {
   pageHeight=0;
   fontsPageMarker = 0;
   DocName=NULL;
+  firstPage = -1;
 }
 
 HtmlPage::~HtmlPage() {
@@ -510,6 +511,8 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   FILE* pageFile;
   GString* tmp;
   GString *htmlEncoding;
+
+  if( firstPage == -1 ) firstPage = page; 
   
   if( !noframes )
   {
@@ -537,9 +540,10 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   {
       pageFile = file;
       fprintf(pageFile,"<!-- Page %d -->\n", page);
-      fprintf(pageFile,"<a name=\"%d\"></a>\n", page); 
-      fprintf(pageFile,"<DIV style=\"position:relative;\">\n");
+      fprintf(pageFile,"<a name=\"%d\"></a>\n", page);
   } 
+  
+  fprintf(pageFile,"<DIV style=\"position:relative;\">\n");
 
   tmp=basename(DocName);
    
@@ -554,14 +558,15 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   
   if( !noframes )
   {  
-      fputs("</HEAD>\n<BODY vlink=\"blue\" link=\"blue\">\n",pageFile); 
+      fputs("</HEAD>\n<BODY bgcolor=\"#A0A0A0\" vlink=\"blue\" link=\"blue\">\n",pageFile); 
   }
   
-  if( !ignore ) {
+  if( !ignore ) 
+  {
     //fputs("<DIV style=\"position:absolute;top:0;left:0\">",pageFile);
     fprintf(pageFile,
 	    "<IMG width=\"%d\" height=\"%d\" src=\"%s%03d.png\" alt=\"background image\">\n",
-	    pageWidth,pageHeight,tmp->getCString(),page);
+	    pageWidth,pageHeight,tmp->getCString(),(page-firstPage+1));
     //fputs("</DIV>",pageFile);
   }
   
@@ -587,32 +592,28 @@ void HtmlPage::dumpComplex(FILE *file, int page){
       fputs("</nobr></DIV>\n",pageFile);
     }
   }
+
+  fputs("</DIV>\n", pageFile);
   
   if( !noframes )
   {
       fputs("</BODY>\n</HTML>\n",pageFile);
       fclose(pageFile);
   }
-  else
-  {
-      fputs("</DIV>\n", pageFile);
-  }
 }
 
 
-void HtmlPage::dump(FILE *f) {
-  static int nump=0;
-
-  nump++;
+void HtmlPage::dump(FILE *f, int pageNum) 
+{
   if (complexMode){
-    if (xml) dumpAsXML(f,nump);
-    if (!xml) dumpComplex(f, nump);  
+    if (xml) dumpAsXML(f, pageNum);
+    if (!xml) dumpComplex(f, pageNum);  
   }
   else{
-    fprintf(f,"<A name=%d></a>",nump);
+    fprintf(f,"<A name=%d></a>",pageNum);
     GString* fName=basename(DocName); 
     for (int i=1;i<HtmlOutputDev::imgNum;i++)
-      fprintf(f,"<IMG src=\"%s-%d_%d.jpg\"><br>\n",fName->getCString(),nump,i);
+      fprintf(f,"<IMG src=\"%s-%d_%d.jpg\"><br>\n",fName->getCString(),pageNum,i);
     HtmlOutputDev::imgNum=1;
     delete fName;
 
@@ -715,7 +716,7 @@ GString* HtmlOutputDev::mapEncodingToHtml(GString* encoding)
     return new GString(encoding); 
 }
 
-void HtmlOutputDev::doFrame(){
+void HtmlOutputDev::doFrame(int firstPage){
   GString* fName=new GString(Docname);
   GString* htmlEncoding;
   fName->append(".html");
@@ -742,7 +743,7 @@ void HtmlOutputDev::doFrame(){
   fprintf(f,"<FRAME name=\"links\" src=\"%s_ind.html\">\n",fName->getCString());
   fputs("<FRAME name=\"contents\" src=",f); 
   if (complexMode) 
-      fprintf(f,"\"%s-1.html\"",fName->getCString());
+      fprintf(f,"\"%s-%d.html\"",fName->getCString(), firstPage);
   else
       fprintf(f,"\"%ss.html\"",fName->getCString());
   
@@ -755,7 +756,7 @@ void HtmlOutputDev::doFrame(){
 
 HtmlOutputDev::HtmlOutputDev(char *fileName, char *title, 
 	char *author, char *keywords, char *subject, char *date,
-	GBool rawOrder) 
+	GBool rawOrder, int firstPage = 1) 
 {
   GString *htmlEncoding;
   
@@ -767,13 +768,14 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
   this->rawOrder = rawOrder;
   ok = gTrue;
   imgNum=1;
-  pageNum=1;
+  //this->firstPage = firstPage;
+  //pageNum=firstPage;
   // open file
   needClose = gFalse;
   pages = new HtmlPage(rawOrder);
 
   glMetaVars = new GList();
-  glMetaVars->append(new HtmlMetaVar("generator", "pdftohtml 0.34a"));  
+  glMetaVars->append(new HtmlMetaVar("generator", "pdftohtml 0.35beta"));  
   if( author ) glMetaVars->append(new HtmlMetaVar("author", author));  
   if( keywords ) glMetaVars->append(new HtmlMetaVar("keywords", keywords));  
   if( date ) glMetaVars->append(new HtmlMetaVar("date", date));  
@@ -785,11 +787,13 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
   pages->setDocName(fileName);
   Docname=new GString (fileName);
 
-  //Complex and simple doc with frames
-  if(!xml&&!noframes){
+  // for non-xml output (complex or simple) with frames generate the left frame
+  if(!xml && !noframes)
+  {
      GString* left=new GString(fileName);
      left->append("_ind.html");
-     doFrame();
+
+     doFrame(firstPage);
    
      if (!(f=fopen(left->getCString(), "w"))){
         error(-1, "Couldn't open html file '%s'", left->getCString());
@@ -871,7 +875,8 @@ HtmlOutputDev::~HtmlOutputDev() {
       fputs("</pdf2xml>\n",page);  
       fclose(page);
     } else
-    if (!complexMode||xml){ 
+    if ( !complexMode || xml || noframes )
+    { 
       fputs("</BODY>\n</HTML>\n",page);  
       fclose(page);
     }
@@ -899,6 +904,7 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
     }
   }*/
 
+  this->pageNum = pageNum;
   GString *str=basename(Docname);
   pages->clear(); 
   if(!noframes){
@@ -907,7 +913,7 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
 	fprintf(f,"<A href=\"%s-%d.html\"",str->getCString(),pageNum);
       else 
 	fprintf(f,"<A href=\"%ss.html#%d\"",str->getCString(),pageNum);
-      fprintf(f," target=\"contents\" >Page %d</a>\n",pageNum);
+      fprintf(f," target=\"contents\" >Page %d</a><br>\n",pageNum);
     }
   }
 
@@ -921,7 +927,7 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
 void HtmlOutputDev::endPage() {
   pages->conv();
   pages->coalesce();
-  pages->dump(page);
+  pages->dump(page, pageNum);
   
   // I don't yet know what to do in the case when there are pages of different
   // sizes and we want complex output: running ghostscript many times 
@@ -929,9 +935,8 @@ void HtmlOutputDev::endPage() {
   maxPageWidth = pages->pageWidth;
   maxPageHeight = pages->pageHeight;
   
-  if(!noframes&&!xml) fputs("<br>", f);
+  //if(!noframes&&!xml) fputs("<br>\n", f);
   if(!stout && !globalParams->getErrQuiet()) printf("Page-%d\n",(pageNum));
-  pageNum++ ;
 }
 
 void HtmlOutputDev::updateFont(GfxState *state) {

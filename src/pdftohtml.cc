@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/\n", "0.34a");
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/\n", "0.35beta");
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "based on Xpdf version %s\n", xpdfVersion);
     fprintf(stderr, "%s\n\n", xpdfCopyright);
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
 	  keywords ? keywords->getCString() : NULL, 
           subject ? subject->getCString() : NULL, 
 	  date ? date->getCString() : NULL,
-	  rawOrder);
+	  rawOrder, firstPage);
   delete docTitle;
   if( author )
   {   
@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
     if( !executeCommand(gsCmd->getCString()) && !errQuiet) {
       error(-1, "Failed to launch Ghostscript!\n");
     }
-    //unlink(psFileName->getCString());
+    unlink(psFileName->getCString());
     delete tw;
     delete th;
     delete gsCmd;
