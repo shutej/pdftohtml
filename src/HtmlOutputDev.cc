@@ -2,9 +2,12 @@
 //
 // HtmlOutputDev.cc
 //
-// Copyright 1997 Derek B. Noonburg
+// Copyright 1997-2002 Glyph & Cog, LLC
 //
 // Changed 1999-2000 by G.Ovtcharov
+//
+// Changed 2002 by Mikhail Kruk
+//
 //========================================================================
 
 #ifdef __GNUC__
@@ -87,6 +90,12 @@ HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
     yMax = y + 0.35 * fontSize;
     fontpos=0;
   }
+  if (yMin == yMax) {
+    // this is a sanity check for a case that shouldn't happen -- but
+    // if it does happen, we want to avoid dividing by zero later
+    yMin = y;
+    yMax = y + 1;
+  }
   col = 0;
   text = NULL;
   xRight = NULL;
@@ -151,7 +160,8 @@ void HtmlPage::updateFont(GfxState *state) {
   double *fm;
   char *name;
   int code;
-
+  double w;
+  
   // adjust the font size
   fontSize = state->getTransformedFontSize();
   if ((font = state->getFont()) && font->getType() == fontType3) {
@@ -168,8 +178,11 @@ void HtmlPage::updateFont(GfxState *state) {
       }
     }
     if (code < 256) {
-      // 600 is a generic average 'm' width -- yes, this is a hack
-      fontSize *= ((Gfx8BitFont *)font)->getWidth(code) / 0.6;
+      w = ((Gfx8BitFont *)font)->getWidth(code);
+      if (w != 0) {
+	// 600 is a generic average 'm' width -- yes, this is a hack
+	fontSize *= w / 0.6;
+      }
     }
     fm = font->getFontMatrix();
     if (fm[0] != 0) {
@@ -224,8 +237,10 @@ void HtmlPage::addChar(GfxState *state, double x, double y,
   dx -= dx2;
   dy -= dy2;
   state->transformDelta(dx, dy, &w1, &h1);
-  w1 /= uLen;
-  h1 /= uLen;
+  if (uLen != 0) {
+    w1 /= uLen;
+    h1 /= uLen;
+  }
   for (i = 0; i < uLen; ++i) {
     curStr->addChar(state, x1 + i*w1, y1 + i*h1, w1, h1, u[i]);
   }
@@ -322,17 +337,18 @@ void HtmlPage::coalesce() {
     hfont2 = getFont(str2);
     space = str1->yMax - str1->yMin;
     d = str2->xMin - str1->xMax;
-    addLineBreak = fabs(str1->xMin - str2->xMin) < 0.4;
+    addLineBreak = !noMerge && (fabs(str1->xMin - str2->xMin) < 0.4);
     vertSpace = str2->yMin - str1->yMax;
     if (((((rawOrder &&
 	  ((str2->yMin >= str1->yMin && str2->yMin <= str1->yMax) ||
 	   (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
 	 (!rawOrder && str2->yMin < str1->yMax)) &&
 	d > -0.5 * space && d < space) ||
-       (!noMerge && vertSpace >= 0 && vertSpace < 0.5 * space && 
+       (vertSpace >= 0 && vertSpace < 0.5 * space && 
 	addLineBreak)) &&
 	(hfont1->isEqualIgnoreBold(*hfont2))
- 	) {
+ 	) 
+    {
 	n = str1->len + str2->len;
 	if ((addSpace = d > 0.1 * space)) {
 	    ++n;
@@ -620,10 +636,14 @@ void HtmlPage::clear() {
   yxStrings = NULL;
   xyStrings = NULL;
   yxCur1 = yxCur2 = NULL;
-  delete fonts;
-  delete links;
 
-  fonts=new HtmlFontAccu();
+  if( !noframes )
+  {
+      delete fonts;
+      fonts=new HtmlFontAccu();
+  }
+
+  delete links;
   links=new HtmlLinks();
  
 

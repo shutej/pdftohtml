@@ -214,6 +214,7 @@ int main(int argc, char *argv[]) {
    { 
        mode = gTrue;
        noframes = gTrue;
+       noMerge = gTrue;
    }
 
   // get page range
