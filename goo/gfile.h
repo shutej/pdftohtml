@@ -4,7 +4,7 @@
 //
 // Miscellaneous file and directory name manipulation.
 //
-// Copyright 1996 Derek B. Noonburg
+// Copyright 1996-2002 Glyph & Cog, LLC
 //
 //========================================================================
 
@@ -85,8 +85,8 @@ extern time_t getModTime(char *fileName);
 // should be "w" or "wb".  Returns true on success.
 extern GBool openTempFile(GString **name, FILE **f, char *mode, char *ext);
 
-// Executes command, returns true on success
-extern GBool executeCommand(char *command);
+// Execute <command>.  Returns true on success.
+extern GBool executeCommand(char *cmd);
 
 // Just like fgets, but handles Unix, Mac, and/or DOS end-of-line
 // conventions.

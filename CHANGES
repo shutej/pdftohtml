@@ -60,3 +60,4 @@ pdftohtml 0.33b
 -parts of hrefs (links) are joined together (just like <b> and <i>)
 -paragraphs joined together
 -fixed a crash
+-updated Xpdf to 1.01

@@ -42,10 +42,8 @@ CXX_SRC = \
 	$(srcdir)/Decrypt.cc \
 	$(srcdir)/Dict.cc \
 	$(srcdir)/Error.cc \
-	$(srcdir)/FTFont.cc \
 	$(srcdir)/FontEncodingTables.cc \
 	$(srcdir)/FontFile.cc \
-	$(srcdir)/FormWidget.cc \
 	$(srcdir)/Function.cc \
 	$(srcdir)/Gfx.cc \
 	$(srcdir)/GfxFont.cc \
@@ -69,16 +67,18 @@ CXX_SRC = \
 	$(srcdir)/TextOutputDev.cc \
 	$(srcdir)/UnicodeMap.cc \
 	$(srcdir)/XOutputDev.cc \
+        $(srcdir)/Annot.cc \
+        $(srcdir)/PSTokenizer.cc \
 	$(srcdir)/XRef.cc
 
 #------------------------------------------------------------------------
 
 XPDF_OBJS = Array.o BuiltinFont.o BuiltinFontTables.o Catalog.o \
 	CharCodeToUnicode.o CMap.o Decrypt.o Dict.o Error.o \
-	FontEncodingTables.o FontFile.o FormWidget.o Function.o Gfx.o \
+	FontEncodingTables.o FontFile.o Function.o Gfx.o \
 	GfxFont.o GfxState.o GlobalParams.o Lexer.o Link.o \
 	NameToCharCode.o Object.o OutputDev.o Page.o Parser.o PDFDoc.o \
-	PSOutputDev.o Stream.o UnicodeMap.o XRef.o
+	PSOutputDev.o Stream.o UnicodeMap.o XRef.o PSTokenizer.o Annot.o 
 
 $(LIBPREFIX)Xpdf.a: $(XPDF_OBJS)
 	rm -f $(LIBPREFIX)Xpdf.a

@@ -4,7 +4,7 @@
 //
 // Miscellaneous file and directory name manipulation.
 //
-// Copyright 1996 Derek B. Noonburg
+// Copyright 1996-2002 Glyph & Cog, LLC
 //
 //========================================================================
 
@@ -443,16 +443,6 @@ time_t getModTime(char *fileName) {
 #endif
 }
 
-// true is success
-GBool executeCommand(char *command)
-{
-#ifdef VMS
-  return system(command);
-#else
-  return !system(command);
-#endif
-}
-
 GBool openTempFile(GString **name, FILE **f, char *mode, char *ext) {
 #if defined(WIN32)
   //---------- Win32 ----------
@@ -495,20 +485,26 @@ GBool openTempFile(GString **name, FILE **f, char *mode, char *ext) {
   return gTrue;
 #else
   //---------- Unix ----------
-  char *s, *p;
+  char *s;
   int fd;
 
   if (ext) {
+#if HAVE_MKSTEMPS
+    if ((s = getenv("TMPDIR"))) {
+      *name = new GString(s);
+    } else {
+      *name = new GString("/tmp");
+    }
+    (*name)->append("/XXXXXX")->append(ext);
+    fd = mkstemps((*name)->getCString(), strlen(ext));
+#else
     if (!(s = tmpnam(NULL))) {
       return gFalse;
     }
     *name = new GString(s);
-    s = (*name)->getCString();
-    /*if ((p = strrchr(s, '.'))) {
-      (*name)->del(p - s, (*name)->getLength() - (p - s));
-      }*/
     (*name)->append(ext);
     fd = open((*name)->getCString(), O_WRONLY | O_CREAT | O_EXCL, 0600);
+#endif
   } else {
 #if HAVE_MKSTEMP
     if ((s = getenv("TMPDIR"))) {
@@ -531,6 +527,14 @@ GBool openTempFile(GString **name, FILE **f, char *mode, char *ext) {
     return gFalse;
   }
   return gTrue;
+#endif
+}
+
+GBool executeCommand(char *cmd) {
+#ifdef VMS
+  return system(cmd) ? gTrue : gFalse;
+#else
+  return system(cmd) ? gFalse : gTrue;
 #endif
 }
 
