@@ -28,6 +28,13 @@ enum UnicodeMapKind {
   unicodeMapFunc		// function pointer
 };
 
+enum UnicodeTextDirection {
+  textDirUnknown,
+  textDirLeftRight,
+  textDirRightLeft,
+  textDirTopBottom
+};
+
 typedef int (*UnicodeMapFunc)(Unicode u, char *buf, int bufSize);
 
 struct UnicodeMapRange {
@@ -70,6 +77,10 @@ public:
   // truncated at <bufSize> bytes.  No string terminator is written.
   // Returns 0 if no mapping is found.
   int mapUnicode(Unicode u, char *buf, int bufSize);
+
+  // determines the direction of the text by checking 
+  // unicode ranges
+  static enum UnicodeTextDirection getDirection(Unicode u);
 
 private:
 

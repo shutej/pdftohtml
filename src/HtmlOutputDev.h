@@ -23,6 +23,7 @@
 #include "HtmlFonts.h"
 #include "Link.h"
 #include "Catalog.h"
+#include "UnicodeMap.h"
 
 
 #ifdef WIN32
@@ -58,6 +59,7 @@ public:
 	       double dx, double dy,
 	       Unicode u); 
   HtmlLink* getLink() { return link; }
+  void endString(); // postprocessing
 
 private:
 // aender die text variable
@@ -73,6 +75,7 @@ private:
   GString* htext;
   int len;			// length of text and xRight
   int size;			// size of text and xRight arrays
+  UnicodeTextDirection dir;	// direction (left to right/right to left)
   
   friend class HtmlPage;
 
@@ -99,7 +102,9 @@ public:
 
   // Add a character to the current string.
   void addChar(GfxState *state, double x, double y,
-	       double dx, double dy, Unicode *u, int uLen); //Guchar c);
+	       double dx, double dy, 
+		double ox, double oy, 
+		Unicode *u, int uLen); //Guchar c);
 
   void updateFont(GfxState *state);
 
@@ -251,7 +256,8 @@ public:
   int getPageHeight() { return maxPageHeight; }
 
 private:
-
+  // convert encoding into a HTML standard, or encoding->getCString if not
+  // recognized
   static char* mapEncodingToHtml(GString* encoding);
   GString* getLinkDest(Link *link,Catalog *catalog);
   void dumpMetaVars(FILE *);

@@ -70,3 +70,4 @@ pdftohtml 0.35
 -added mechanism for correct charsets
 -fixed bug with links pointing nowhere for '-c -noframes'
 -fixed bug with page numbering
+-fixed bug with collapsing text for '-c -noframes -i'

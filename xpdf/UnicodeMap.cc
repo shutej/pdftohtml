@@ -206,6 +206,15 @@ int UnicodeMap::mapUnicode(Unicode u, char *buf, int bufSize) {
   return 0;
 }
 
+UnicodeTextDirection UnicodeMap::getDirection(Unicode u)
+{
+  // TODO: add TopBottom detection (Japanese, Chinese etc)
+  if( u >= 0x0590 && u <= 0x05ff ) { // hebrew
+    return textDirRightLeft; 
+  }
+  return textDirLeftRight;
+}
+
 //------------------------------------------------------------------------
 
 UnicodeMapCache::UnicodeMapCache() {

@@ -22,6 +22,7 @@
 #include <math.h>
 #include "GString.h"
 #include "GList.h"
+#include "UnicodeMap.h"
 #include "gmem.h"
 #include "config.h"
 #include "Error.h"
@@ -46,11 +47,7 @@ extern GBool xml;
 extern GBool showHidden;
 extern GBool noMerge;
 
-//------------------------------------------------------------------------
-// HtmlString
-//------------------------------------------------------------------------
-
-GString* basename(GString* str){
+static GString* basename(GString* str){
   
   char *p=str->getCString();
   int len=str->getLength();
@@ -60,7 +57,7 @@ GString* basename(GString* str){
   return new GString(str);
 }
 
-GString* Dirname(GString* str){
+static GString* Dirname(GString* str){
   
   char *p=str->getCString();
   int len=str->getLength();
@@ -69,6 +66,10 @@ GString* Dirname(GString* str){
       return new GString(p,i+1);
   return new GString();
 } 
+
+//------------------------------------------------------------------------
+// HtmlString
+//------------------------------------------------------------------------
 
 HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
   GfxFont *font;
@@ -105,6 +106,7 @@ HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
   yxNext = NULL;
   xyNext = NULL;
   htext=new GString();
+  dir = textDirUnknown;
 }
 
 
@@ -116,6 +118,10 @@ HtmlString::~HtmlString() {
 
 void HtmlString::addChar(GfxState *state, double x, double y,
 			 double dx, double dy, Unicode u) {
+  if (dir == textDirUnknown) {
+    dir = UnicodeMap::getDirection(u);
+  } 
+
   if (len == size) {
     size += 16;
     text = (Unicode *)grealloc(text, size * sizeof(Unicode));
@@ -126,10 +132,23 @@ void HtmlString::addChar(GfxState *state, double x, double y,
     xMin = x;
   }
   xMax = xRight[len] = x + dx;
+//printf("added char: %f %f xright = %f\n", x, dx, x+dx);
   ++len;
 }
 
-
+void HtmlString::endString()
+{
+  if( dir == textDirRightLeft && len > 1 )
+  {
+    printf("will reverse!\n");
+    for (int i = 0; i < len / 2; i++)
+    {
+      Unicode ch = text[i];
+      text[i] = text[len - i - 1];
+      text[len - i - 1] = ch;
+    }
+  }
+}
 
 //------------------------------------------------------------------------
 // HtmlPage
@@ -224,14 +243,18 @@ void HtmlPage::conv(){
 
 
 void HtmlPage::addChar(GfxState *state, double x, double y,
-		       double dx, double dy, Unicode *u, int uLen) {
+		       double dx, double dy, 
+			double ox, double oy, Unicode *u, int uLen) {
   double x1, y1, w1, h1, dx2, dy2;
   int n, i;
-
   state->transform(x, y, &x1, &y1);
   n = curStr->len;
-  if (n > 0 &&
-      x1 - curStr->xRight[n-1] > 0.1 * (curStr->yMax - curStr->yMin)) {
+ 
+  // check that new character is in the same direction as current string
+  // and is not too far away from it before adding 
+  if ((UnicodeMap::getDirection(u[0]) != curStr->dir) || 
+     (n > 0 && 
+      fabs(x1 - curStr->xRight[n-1]) > 0.1 * (curStr->yMax - curStr->yMin))) {
     endString();
     beginString(state, NULL);
   }
@@ -260,6 +283,8 @@ void HtmlPage::endString() {
     curStr = NULL;
     return;
   }
+
+  curStr->endString();
 
 #if 0 //~tmp
   if (curStr->yMax - curStr->yMin > 20) {
@@ -342,6 +367,11 @@ void HtmlPage::coalesce() {
     d = str2->xMin - str1->xMax;
     addLineBreak = !noMerge && (fabs(str1->xMin - str2->xMin) < 0.4);
     vertSpace = str2->yMin - str1->yMax;
+
+
+
+//printf("coalesce %d %d %f? ", str1->dir, str2->dir, d);
+
     if (((((rawOrder &&
 	  ((str2->yMin >= str1->yMin && str2->yMin <= str1->yMax) ||
 	   (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
@@ -349,17 +379,19 @@ void HtmlPage::coalesce() {
 	d > -0.5 * space && d < space) ||
        (vertSpace >= 0 && vertSpace < 0.5 * space && 
 	addLineBreak)) &&
-	(hfont1->isEqualIgnoreBold(*hfont2))
+	(hfont1->isEqualIgnoreBold(*hfont2)) &&
+	str1->dir == str2->dir // text direction the same
  	) 
     {
-	n = str1->len + str2->len;
-	if ((addSpace = d > 0.1 * space)) {
-	    ++n;
-	}
-	if (addLineBreak) {
-	    ++n;
-	}
-
+      printf("yes\n");
+      n = str1->len + str2->len;
+      if ((addSpace = d > 0.1 * space)) {
+        ++n;
+      }
+      if (addLineBreak) {
+        ++n;
+      }
+  
       str1->size = (n + 15) & ~15;
       str1->text = (Unicode *)grealloc(str1->text,
 				       str1->size * sizeof(Unicode));
@@ -434,7 +466,8 @@ void HtmlPage::coalesce() {
       }
       str1->yxNext = str2->yxNext;
       delete str2;
-    } else {
+    } else { // keep strings separate
+      printf("no\n"); 
       if( hfont1->isBold() )
 	str1->htext->append("</b>",4);
       if( hfont1->isItalic() )
@@ -542,7 +575,8 @@ void HtmlPage::dumpComplex(FILE *file, int page){
       fprintf(pageFile,"<a name=\"%d\"></a>\n", page);
   } 
   
-  fprintf(pageFile,"<DIV style=\"position:relative;\">\n");
+  fprintf(pageFile,"<DIV style=\"position:relative;width:%d;height:%d;\">\n",
+	pageWidth, pageHeight);
 
   tmp=basename(DocName);
    
@@ -960,7 +994,7 @@ void HtmlOutputDev::drawChar(GfxState *state, double x, double y,
   if ( !showHidden && (state->getRender() & 3) == 3) {
     return;
   }
-  pages->addChar(state, x, y, dx, dy, u, uLen);
+  pages->addChar(state, x, y, dx, dy, originX, originY, u, uLen);
 }
 
 void HtmlOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str,
