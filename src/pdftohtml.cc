@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
    if (scale<0.5) scale=0.5;
    
    if (mode) {
-     noframes=gFalse;
+     //noframes=gFalse;
      stout=gFalse;
    } 
 
@@ -211,10 +211,10 @@ int main(int argc, char *argv[]) {
    }
 
    if (xml)
-     { 
+   { 
        mode = gTrue;
        noframes = gTrue;
-     }
+   }
 
   // get page range
   if (firstPage < 1)

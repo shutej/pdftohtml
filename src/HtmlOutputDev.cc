@@ -463,7 +463,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
   fprintf(f," top=\"0\" left=\"0\" height=\"%d\" width=\"%d\">\n", pageHeight,pageWidth);
     
   for(int i=0;i!=fonts->size();i++) {
-    GString *fontCSStyle = fonts->CSStyle(i);
+    GString *fontCSStyle = fonts->CSStyle(i, page);
     fprintf(f,"\t%s\n",fontCSStyle->getCString());
     delete fontCSStyle;
   }
@@ -476,7 +476,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
       fprintf(f,"width=\"%d\" height=\"%d\" ",xoutRound(tmp->xMax-tmp->xMin),xoutRound(tmp->yMax-tmp->yMin));
       fprintf(f,"font=\"%d\">", tmp->fontpos);
       if (tmp->fontpos!=-1){
-	str1=fonts->getCSStyle(tmp->fontpos,str);
+	str1=fonts->getCSStyle(tmp->fontpos, page, str);
       }
       fputs(str1->getCString(),f);
       delete str;
@@ -488,40 +488,57 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
 }
 
 
-void HtmlPage::dumpComplex(int page){
-  FILE* f;
-
-  GString* tmp=new GString(DocName);   
-  GString* pgNum=GString::IntToStr(page);
-  tmp->append('-')->append(pgNum)->append(".html");
-  delete pgNum;
-
-  if (!(f = fopen(tmp->getCString(), "w"))) {
-    error(-1, "Couldn't open html file '%s'", tmp->getCString());
-    delete tmp;
-    return;
-  }    
-  delete tmp;
-  tmp=basename(DocName);
+void HtmlPage::dumpComplex(FILE *file, int page){
+  FILE* pageFile;
+  GString* tmp;
   
-  fprintf(f,"<html>\n<head>\n<title>Page %d</title>\n\n",page);
-  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
-  fprintf(f, "%s\n", GENERATOR);
-  fputs("<style type=\"text/css\">\n<!--\n",f);
-    
+  if( !noframes )
+  {
+      GString* pgNum=GString::IntToStr(page);
+      tmp = new GString(DocName);
+      tmp->append('-')->append(pgNum)->append(".html");
+      delete pgNum;
+  
+      if (!(pageFile = fopen(tmp->getCString(), "w"))) {
+	  error(-1, "Couldn't open html file '%s'", tmp->getCString());
+	  delete tmp;
+	  return;
+      } 
+      delete tmp;
+
+      fprintf(pageFile,"<html>\n<head>\n<title>Page %d</title>\n\n",page);
+      fprintf(pageFile, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
+      fprintf(pageFile, "%s\n", GENERATOR);
+  }
+  else 
+  {
+      pageFile = file;
+      fprintf(pageFile,"<!-- Page %d -->\n", page);
+      fprintf(pageFile,"<div style=\"position:relative;\">\n");
+  } 
+
+  tmp=basename(DocName);
+   
+  fputs("<style type=\"text/css\">\n<!--\n",pageFile);
   for(int i=0;i!=fonts->size();i++) {
-    GString *fontCSStyle = fonts->CSStyle(i);
-    fprintf(f,"\t%s\n",fontCSStyle->getCString());
+    GString *fontCSStyle = fonts->CSStyle(i, page);
+    fprintf(pageFile,"\t%s\n",fontCSStyle->getCString());
     delete fontCSStyle;
   }
-    
-  fputs("-->\n</style>\n",f);
-  fputs("</head>\n<body vlink=\"blue\" link=\"blue\">\n",f); 
-
+ 
+  fputs("-->\n</style>\n",pageFile);
+  
+  if( !noframes )
+  {  
+      fputs("</head>\n<body vlink=\"blue\" link=\"blue\">\n",pageFile); 
+  }
+  
   if( !ignore ) {
-    fputs("<div style=\"position:absolute;top:0;left:0\">",f);
-    fprintf(f,"<img width=\"%d\" height=\"%d\" src=\"%s%03d.png\">",pageWidth,pageHeight,tmp->getCString(),page);
-    fputs("</div>",f);
+    //fputs("<div style=\"position:absolute;top:0;left:0\">",pageFile);
+    fprintf(pageFile,
+	    "<img width=\"%d\" height=\"%d\" src=\"%s%03d.png\">",
+	    pageWidth,pageHeight,tmp->getCString(),page);
+    //fputs("</div>",pageFile);
   }
   
   delete tmp;
@@ -530,21 +547,32 @@ void HtmlPage::dumpComplex(int page){
   for(HtmlString *tmp1=yxStrings;tmp1;tmp1=tmp1->yxNext){
     if (tmp1->htext){
       str=new GString(tmp1->htext);
-      fprintf(f,"<div style=\"position:absolute;top:%d;left:%d\">",xoutRound(tmp1->yMin),xoutRound(tmp1->xMin));
-      fputs("<nobr>",f); 
+      fprintf(pageFile,
+	      "<div style=\"position:absolute;top:%d;left:%d\">",
+	      xoutRound(tmp1->yMin),
+	      xoutRound(tmp1->xMin));
+      fputs("<nobr>",pageFile); 
       if (tmp1->fontpos!=-1){
-	str1=fonts->getCSStyle(tmp1->fontpos,str);  
+	str1=fonts->getCSStyle(tmp1->fontpos, page, str);  
       }
       //printf("%s\n", str1->getCString());
-      fputs(str1->getCString(),f);
+      fputs(str1->getCString(),pageFile);
       
       delete str;      
       delete str1;
-      fputs("</nobr></div>\n",f);
+      fputs("</nobr></div>\n",pageFile);
     }
   }
-  fputs("</body>\n</html>\n",f);
-  fclose(f);
+  
+  if( !noframes )
+  {
+      fputs("</body>\n</html>\n",pageFile);
+      fclose(pageFile);
+  }
+  else
+  {
+      fputs("</div>\n", pageFile);
+  }
 }
 
 
@@ -554,7 +582,7 @@ void HtmlPage::dump(FILE *f) {
   nump++;
   if (mode){
     if (xml) dumpAsXML(f,nump);
-    if (!xml) dumpComplex(nump);  
+    if (!xml) dumpComplex(f, nump);  
   }
   else{
     fprintf(f,"<a name=%d></a>",nump);

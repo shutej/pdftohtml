@@ -143,7 +143,7 @@ private:
   
   void setDocName(char* fname);
   void dumpAsXML(FILE* f,int page);
-  void dumpComplex(int page);
+  void dumpComplex(FILE* f, int page);
  
   HtmlFontAccu *fonts;
   HtmlLinks *links; 

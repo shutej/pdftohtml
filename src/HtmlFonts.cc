@@ -243,13 +243,16 @@ int HtmlFontAccu::AddFont(const HtmlFont& font){
   return (accu->size()-1);
 }
 
-
-GString* HtmlFontAccu::getCSStyle(int i,GString* content){
+// get CSS font name for font #i on page #page
+GString* HtmlFontAccu::getCSStyle(int i, int page, GString* content){
   GString *tmp;
   GString *iStr=GString::IntToStr(i);
-
+  GString *pStr=GString::IntToStr(page);
+  
   if (!xml) {
     tmp = new GString("<span class=\"ft");
+    tmp->append(pStr);
+    tmp->append("-");
     tmp->append(iStr);
     tmp->append("\">");
     tmp->append(content);
@@ -260,12 +263,15 @@ GString* HtmlFontAccu::getCSStyle(int i,GString* content){
   }
 
   delete iStr;
+  delete pStr;
   return tmp;
 }
 
-GString* HtmlFontAccu::CSStyle(int i){
+// get CSS font definition for font #i on page #page
+GString* HtmlFontAccu::CSStyle(int i, int page){
    GString *tmp=new GString();
    GString *iStr=GString::IntToStr(i);
+   GString *pStr=GString::IntToStr(page);
 
    GVector<HtmlFont>::iterator g=accu->begin();
    g+=i;
@@ -277,6 +283,8 @@ GString* HtmlFontAccu::CSStyle(int i){
    
    if(!xml){
      tmp->append(".ft");
+     tmp->append(pStr);
+     tmp->append("-");
      tmp->append(iStr);
      tmp->append("{font-size:");
      tmp->append(Size);
@@ -308,6 +316,7 @@ GString* HtmlFontAccu::CSStyle(int i){
    delete fontName;
    delete colorStr;
    delete iStr;
+   delete pStr;
    delete Size;
    return tmp;
 }

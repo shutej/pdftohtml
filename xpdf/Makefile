@@ -14,8 +14,7 @@ srcdir = .
 GOOSRCDIR = $(srcdir)/../goo
 GOOLIBDIR = ../goo
 
-CXXFLAGS += -g -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) 
-#-DDEBUG_MEM
+CXXFLAGS += -g -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) -DDEBUG_MEM
 
 CC ?= cc
 CXX ?= c++
@@ -95,5 +94,3 @@ clean:
 
 depend:
 	$(CXX) $(CXXFLAGS) -MM $(CXX_SRC) >Makefile.dep
-
--include Makefile.dep

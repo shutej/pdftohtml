@@ -10,11 +10,12 @@ Derek B. Noonburg <derekn@foolabs.com>
 Current maitainer:
 Mikhail Kruk <meshko@cs.brandeis.edu>
 
-Contributors:
+Contributors (in random/chronological order):
 Claus Hulstrom and Zoltan Hawryluk - improvements in the generated HTML code
 Anjo Anjewierden - XML output
 Adjamir Galvão <adjamir@hotmail.com> - improvements of XML output
 Søren Boll Overgaard <boll@fork.dk> - FreeBSD port, Debian package
+Ivar Abrahamsen <k111@ivar.co.uk> - help with noframes complex output
 
 and big thanks to everyone who've made pdftohtml better by submitting 
 bug reports
