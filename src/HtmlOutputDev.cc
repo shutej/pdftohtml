@@ -322,20 +322,21 @@ void HtmlPage::coalesce() {
     hfont2 = getFont(str2);
     space = str1->yMax - str1->yMin;
     d = str2->xMin - str1->xMax;
+    addLineBreak = fabs(str1->xMin - str2->xMin) < 0.4;
     vertSpace = str2->yMin - str1->yMax;
     if (((((rawOrder &&
 	  ((str2->yMin >= str1->yMin && str2->yMin <= str1->yMax) ||
 	   (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
 	 (!rawOrder && str2->yMin < str1->yMax)) &&
 	d > -0.5 * space && d < space) ||
-       (!noMerge && vertSpace < 0.3 * space && str1->xMin == str2->xMin)) &&
+       (!noMerge && vertSpace < 0.5 * space && addLineBreak)) &&
 	(hfont1->isEqualIgnoreBold(*hfont2))
  	) {
 	n = str1->len + str2->len;
 	if ((addSpace = d > 0.1 * space)) {
 	    ++n;
 	}
-	if ((addLineBreak = str1->xMin == str2->xMin)) {
+	if (addLineBreak) {
 	    ++n;
 	}
 
@@ -365,9 +366,12 @@ void HtmlPage::coalesce() {
 	      HtmlFont *newfnt = new HtmlFont(*hfont1);
 	      newfnt->setLineSize(curLineSize);
 	      str1->fontpos = fonts->AddFont(*newfnt);
-	      hfont1 = newfnt; 
+	      delete newfnt;
+	      hfont1 = getFont(str1);
+	      // we have to reget hfont2 because it's location could have
+	      // changed on resize
+	      hfont2 = getFont(str2); 
 	  }
-	  // tuta hfont1->setLineSize((unsigned int)vertSpace+space+1);
       }
       for (i = 0; i < str2->len; ++i) {
 	str1->text[str1->len] = str2->text[i];

@@ -1,4 +1,4 @@
-Known bugs in pdftohtml 0.33:
+Known bugs (and TODOs) in pdftohtml 0.33:
 
 * Complex output will not work correctly when there are pages of different size
 (large background image will be screwed up)
