@@ -1428,5 +1428,7 @@ GString *HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
     }
     return file;      
   }
+  default:
+    return new GString();
   }
 }
