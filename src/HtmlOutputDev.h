@@ -252,7 +252,7 @@ public:
 
 private:
 
-  static GString* mapEncodingToHtml(GString* encoding);
+  static char* mapEncodingToHtml(GString* encoding);
   GString* getLinkDest(Link *link,Catalog *catalog);
   void dumpMetaVars(FILE *);
   void doFrame(int firstPage);

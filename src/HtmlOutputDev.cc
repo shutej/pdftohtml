@@ -510,7 +510,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
 void HtmlPage::dumpComplex(FILE *file, int page){
   FILE* pageFile;
   GString* tmp;
-  GString *htmlEncoding;
+  char* htmlEncoding;
 
   if( firstPage == -1 ) firstPage = page; 
   
@@ -533,8 +533,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
 
       htmlEncoding = HtmlOutputDev::mapEncodingToHtml
 	  (globalParams->getTextEncodingName());
-      fprintf(pageFile, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
-      delete htmlEncoding;
+      fprintf(pageFile, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding);
   }
   else 
   {
@@ -703,22 +702,22 @@ static char* HtmlEncodings[][2] = {
 };
 
 
-GString* HtmlOutputDev::mapEncodingToHtml(GString* encoding)
+char* HtmlOutputDev::mapEncodingToHtml(GString* encoding)
 {
     char* enc = encoding->getCString();
     for(int i = 0; HtmlEncodings[i][0] != NULL; i++)
     {
 	if( strcmp(enc, HtmlEncodings[i][0]) == 0 )
 	{
-	    return new GString(HtmlEncodings[i][1]);
+	    return HtmlEncodings[i][1];
 	}
     }
-    return new GString(encoding); 
+    return enc; 
 }
 
 void HtmlOutputDev::doFrame(int firstPage){
   GString* fName=new GString(Docname);
-  GString* htmlEncoding;
+  char* htmlEncoding;
   fName->append(".html");
 
   if (!(f = fopen(fName->getCString(), "w"))){
@@ -735,8 +734,7 @@ void HtmlOutputDev::doFrame(int firstPage){
   fputs("\n<HEAD>",f);
   fprintf(f,"\n<TITLE>%s</TITLE>",docTitle->getCString());
   htmlEncoding = mapEncodingToHtml(globalParams->getTextEncodingName());
-  fprintf(f, "\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
-  delete htmlEncoding;
+  fprintf(f, "\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding);
   dumpMetaVars(f);
   fprintf(f, "</HEAD>\n");
   fputs("<FRAMESET cols=\"100,*\">\n",f);
@@ -758,7 +756,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
 	char *author, char *keywords, char *subject, char *date,
 	GBool rawOrder, int firstPage = 1) 
 {
-  GString *htmlEncoding;
+  char *htmlEncoding;
   
   f=NULL;
   docTitle = new GString(title);
@@ -832,17 +830,20 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
       }  
       delete right;
     }
-    if (xml) {
-      fputs("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n", page);
+
+    htmlEncoding = mapEncodingToHtml(globalParams->getTextEncodingName()); 
+    if (xml) 
+    {
+      fprintf(page, "<?xml version=\"1.0\" encoding=\"%s\"?>\n", htmlEncoding);
       fputs("<!DOCTYPE pdf2xml SYSTEM \"pdf2xml.dtd\">\n\n", page);
       fputs("<pdf2xml>\n",page);
-    } else {
+    } 
+    else 
+    {
       fprintf(page,"%s\n<HTML>\n<HEAD>\n<TITLE>%s</TITLE>\n",
 	      DOCTYPE, docTitle->getCString());
       
-      htmlEncoding = mapEncodingToHtml(globalParams->getTextEncodingName());
-      fprintf(page, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
-      delete htmlEncoding;
+      fprintf(page, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding);
       
       dumpMetaVars(page);
       fprintf(page,"</HEAD>\n");
