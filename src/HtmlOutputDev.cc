@@ -1432,7 +1432,7 @@ GBool HtmlOutputDev::dumpDocOutline(Catalog* catalog)
 		}
 		else
 		{
-			GString *str = basename(Docname);
+			GString *str = new GString(Docname);
 			str->append("-outline.html");
 			output = fopen(str->getCString(), "w");
 			if (output == NULL)

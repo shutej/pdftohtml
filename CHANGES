@@ -81,3 +81,8 @@ pdftohtml 0.36
 -ported duplicate lines elimination from pdftotext (does not affect complex mode)
 -fixed bug which caused bold to spread from one sentence to the entire document
 -support for document outlines (patch by Nicolas Pitre)
+
+pdftohtml 0.36a beta
+=====================
+-workaround for broken compilation on MacOS X
+-fixed a bug for outline when a different output dir is specified (thanks to Steffan A. Cline)
