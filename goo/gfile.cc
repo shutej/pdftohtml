@@ -443,6 +443,16 @@ time_t getModTime(char *fileName) {
 #endif
 }
 
+// true is success
+GBool executeCommand(char *command)
+{
+#ifdef VMS
+  return system(command);
+#else
+  return !system(command);
+#endif
+}
+
 GBool openTempFile(GString **name, FILE **f, char *mode, char *ext) {
 #if defined(WIN32)
   //---------- Win32 ----------

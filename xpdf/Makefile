@@ -17,15 +17,12 @@ GOOLIBDIR = ../goo
 
 CXXFLAGS = -g -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR)  -I$(srcdir)  
 
-LDFLAGS = 
-
-
-OTHERLIBS =  
-
+CC = gcc
 CXX = c++
+AR = ar rc
+RANLIB = ranlib
 
 LIBPREFIX = lib
-EXE = 
 
 #------------------------------------------------------------------------
 
@@ -73,43 +70,31 @@ CXX_SRC = \
 	$(srcdir)/TextOutputDev.cc \
 	$(srcdir)/UnicodeMap.cc \
 	$(srcdir)/XOutputDev.cc \
-	$(srcdir)/XRef.cc \
-	$(srcdir)/pdftops.cc 
-
-#------------------------------------------------------------------------
-
-all: pdftops$(EXE) 
+	$(srcdir)/XRef.cc
 
 #------------------------------------------------------------------------
 
 XPDF_OBJS = Array.o BuiltinFont.o BuiltinFontTables.o Catalog.o \
-	CharCodeToUnicode.o CMap.o Decrypt.o Dict.o Error.o FTFont.o \
-	FontEncodingTables.o FontFile.o FormWidget.o Function.o Gfx.o \
-	GfxFont.o GfxState.o GlobalParams.o Lexer.o Link.o \
-	NameToCharCode.o Object.o OutputDev.o Page.o Parser.o PDFDoc.o \
-	PSOutputDev.o SFont.o Stream.o T1Font.o TTFont.o TextOutputDev.o \
-	UnicodeMap.o XOutputDev.o XRef.o 
-
-XPDF_LIBS =  -L$(GOOLIBDIR) -lGoo $(XLIBS) $(OTHERLIBS) -lm
-
-#------------------------------------------------------------------------
-
-PDFTOPS_OBJS = Array.o BuiltinFont.o BuiltinFontTables.o Catalog.o \
 	CharCodeToUnicode.o CMap.o Decrypt.o Dict.o Error.o \
 	FontEncodingTables.o FontFile.o FormWidget.o Function.o Gfx.o \
 	GfxFont.o GfxState.o GlobalParams.o Lexer.o Link.o \
 	NameToCharCode.o Object.o OutputDev.o Page.o Parser.o PDFDoc.o \
-	PSOutputDev.o Stream.o UnicodeMap.o XRef.o pdftops.o
-PDFTOPS_LIBS = -L$(GOOLIBDIR) -lGoo $(OTHERLIBS) -lm
+	PSOutputDev.o Stream.o UnicodeMap.o XRef.o
 
-pdftops$(EXE): $(PDFTOPS_OBJS) $(GOOLIBDIR)/$(LIBPREFIX)Goo.a
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o pdftops$(EXE) $(PDFTOPS_OBJS) \
-		$(PDFTOPS_LIBS)
+$(LIBPREFIX)Xpdf.a: $(XPDF_OBJS)
+	rm -f $(LIBPREFIX)Xpdf.a
+	$(AR) $(LIBPREFIX)Xpdf.a $(XPDF_OBJS)
+	$(RANLIB) $(LIBPREFIX)Xpdf.a
+
+#------------------------------------------------------------------------
+
+
+#PDFTOPS_LIBS = -L$(GOOLIBDIR) -lGoo $(OTHERLIBS) -lm
 
 #------------------------------------------------------------------------
 
 clean:
-	rm -f $(PDFTOPS_OBJS) pdftops$(EXE)
+	rm -f $(XPDF_OBJS)
 
 #------------------------------------------------------------------------
 

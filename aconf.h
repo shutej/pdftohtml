@@ -53,6 +53,7 @@
 #define HAVE_MKSTEMP 1
 #define HAVE_MKSTEMPS 1
 /* #undef SELECT_TAKES_INT */
+#define GHOSTSCRIPT "gs"
 
 /*
  * This is defined if using libXpm.

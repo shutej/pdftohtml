@@ -26,16 +26,15 @@
 //#include "UnicodeMap.h"
 //#include "FontEncoding.h"
 #include "HtmlOutputDev.h"
-//#include "GVector.h" 
 #include "HtmlFonts.h"
 
 
 //#include "TextOutputFontInfo.h"
 
-#define xoutRound(x) ((int)(x + 0.5))
-
 int HtmlPage::pgNum=0;
 int HtmlOutputDev::imgNum=1;
+
+/*
 //------------------------------------------------------------------------
 // Character substitutions
 //------------------------------------------------------------------------
@@ -170,7 +169,7 @@ static char *japan12Abbrev1[6] = {
 };
 
 #endif
-
+*/
 
 extern double scale;
 extern GBool mode;
@@ -489,67 +488,6 @@ void HtmlPage::coalesce() {
   }
 }
 
-/*void HtmlPage::coalesce() {
-  HtmlString *str1, *str2;
-  double space, d;
-  int n, i;
-
-#if 0 //~ for debugging
-  for (str1 = yxStrings; str1; str1 = str1->yxNext) {
-    printf("x=%3d..%3d  y=%3d..%3d  size=%2d '%s'\n",
-           (int)str1->xMin, (int)str1->xMax, (int)str1->yMin, (int)str1->yMax,
-           (int)(str1->yMax - str1->yMin), str1->text->getCString());
-  }
-  printf("\n------------------------------------------------------------\n\n");
-#endif
-  str1 = yxStrings;
-  while (str1 && (str2 = str1->yxNext)) {
-    space = str1->yMax - str1->yMin;
-    d = str2->xMin - str1->xMax;
-#if 0 //~tmp
-    if (((rawOrder &&
-          ((str2->yMin >= str1->yMin && str2->yMin <= str1->yMax) ||
-           (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
-         (!rawOrder && str2->yMin < str1->yMax)) &&
-        d > -0.1 * space && d < 0.2 * space &&(str1->fontpos==str2->fontpos)){
-#else
-    if (((rawOrder &&
-          ((str2->yMin >= str1->yMin && str2->yMin <= str1->yMax) ||
-           (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
-         (!rawOrder && str2->yMin < str1->yMax)) &&
-        d > -0.5 * space && d < space&&(str1->fontpos==str2->fontpos)) {
-#endif
-      n = str1->len;
-      
-            
-      if (d > 0.1 * space){
-	str1->text->append(" ");
-        str1->htext->append(" \n");
-      }
-      
-        str1->text->append(str2->text);
-        str1->htext->append(str2->htext);
-        str1->xRight = (double *)
-	grealloc(str1->xRight, str1->len * sizeof(double));
-      if (d > 0.1 * space)
-	str1->xRight[n++] = str2->xMin;
-      for (i = 0; i < str2->len; ++i)
-	str1->xRight[n++] = str2->xRight[i];
-      if (str2->xMax > str1->xMax)
-	str1->xMax = str2->xMax;
-      if (str2->yMax > str1->yMax)
-	str1->yMax = str2->yMax;
-      str1->yxNext = str2->yxNext;
-      delete str2;
-      
-    } else {
-      str1 = str2;
-    }
-          
- }
-}
-*/
-
 void HtmlPage::dumpAsXML(FILE* f,int page){  
   fprintf(f, "<page number=\"%d\" position=\"absolute\"", page);
   fprintf(f," top=\"0\" left=\"0\" height=\"%d\" width=\"%d\">\n", pageHeight,pageWidth);
@@ -757,7 +695,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
   f=NULL;
   pages = NULL;
   dumpJPEG=gTrue;
-  write = gTrue;
+  //write = gTrue;
   this->rawOrder = rawOrder;
   ok = gTrue;
   imgNum=1;
@@ -765,6 +703,9 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
   // open file
   needClose = gFalse;
   pages = new HtmlPage(rawOrder);
+
+  maxPageWidth = 0;
+  maxPageHeight = 0;
 
   pages->setDocName(fileName);
   Docname=new GString (fileName);
@@ -830,13 +771,13 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
 }
 
 HtmlOutputDev::~HtmlOutputDev() {
-  if (mode&&!xml){
+  /*if (mode&&!xml){
     int h=xoutRound(pages->pageHeight/scale);
     int w=xoutRound(pages->pageWidth/scale);
     fprintf(tin,"%s=%03d\n","PAPER_WIDTH",w);
     fprintf(tin,"%s=%03d\n","PAPER_HEIGHT",h);
     fclose(tin);
-  }
+    }*/
 
     HtmlFont::clear(); 
     
@@ -860,7 +801,7 @@ HtmlOutputDev::~HtmlOutputDev() {
 
 
 void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
-  if (mode&&!xml){
+  /*if (mode&&!xml){
     if (write){
       write=gFalse;
       GString* fname=Dirname(Docname);
@@ -875,7 +816,8 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
     // else 
       fprintf(tin,"ROTATE=%d neg %d neg translate\n",state->getX1(),state->getY1());  
     }
-  }
+  }*/
+
   GString *str=basename(Docname);
   pages->clear(); 
     if(!noframes){
@@ -895,12 +837,15 @@ void HtmlOutputDev::endPage() {
   pages->conv();
   pages->coalesce();
   pages->dump(page);
-
-  if( xml ){ // TEMP! in fact I should *always* do this
-    // reset page width and height so that it will be updated for the new page
-    pages->pageWidth = 0;
-    pages->pageHeight = 0;
-  }
+  
+  // I don't yet know what to do in the case when there are pages of different
+  // sizes and we want complex output: running ghostscript many times 
+  // seems very inefficient. So for now I'll just use last page's size
+  maxPageWidth = pages->pageWidth;
+  maxPageHeight = pages->pageHeight;
+  // reset page width and height so that it will be updated for the new page
+  pages->pageWidth=0;
+  pages->pageHeight=0;
   
 if(!noframes&&!xml) fputs("<br>", f);
   if(!stout && !globalParams->getErrQuiet()) printf("Page-%d\n",(pageNum));
@@ -924,6 +869,9 @@ void HtmlOutputDev::drawChar(GfxState *state, double x, double y,
 	      double originX, double originY,
 	      CharCode code, Unicode *u, int uLen) 
 {
+  if ((state->getRender() & 3) == 3) {
+    return;
+  }
   pages->addChar(state, x, y, dx, dy, u, uLen);
 }
 

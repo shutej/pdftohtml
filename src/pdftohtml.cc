@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <aconf.h>
 #include "parseargs.h"
 #include "GString.h"
 #include "gmem.h"
@@ -22,15 +23,17 @@
 #include "Page.h"
 #include "PDFDoc.h"
 #include "HtmlOutputDev.h"
+#include "PSOutputDev.h"
 #include "GlobalParams.h"
 #include "Error.h"
 #include "config.h"
+#include "gfile.h"
 
 static int firstPage = 1;
 static int lastPage = 0;
-#if JAPANESE_SUPPORT
+/*#if JAPANESE_SUPPORT
 static GBool useEUCJP = gFalse;
-#endif
+#endif*/
 static GBool rawOrder = gTrue;
 GBool printCommands = gTrue;
 static GBool printHelp = gFalse;
@@ -54,10 +57,12 @@ static ArgDesc argDesc[] = {
    "first page to convert"},
   {"-l",      argInt,      &lastPage,      0,
    "last page to convert"},
-#if JAPANESE_SUPPORT
+  /*{"-raw",    argFlag,     &rawOrder,      0,
+    "keep strings in content stream order"},*/
+  /*#if JAPANESE_SUPPORT
   {"-eucjp",  argFlag,     &useEUCJP,      0,
    "convert Japanese text to EUC-JP"},
-#endif
+   #endif*/
   {"-q",      argFlag,     &errQuiet,      0,
    "don't print any messages or errors"},
   {"-h",      argFlag,     &printHelp,     0,
@@ -92,8 +97,10 @@ static ArgDesc argDesc[] = {
 int main(int argc, char *argv[]) {
   PDFDoc *doc;
   GString *fileName;
-  GString *htmlFileName;
-  HtmlOutputDev *htmlOut;
+  GString *htmlFileName = NULL;
+  GString *psFileName = NULL;
+  HtmlOutputDev *htmlOut = NULL;
+  PSOutputDev *psOut = NULL;
   GBool ok;
   char *p;
   GString *ownerPW, *userPW;
@@ -101,7 +108,7 @@ int main(int argc, char *argv[]) {
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml.bin version %s\n", "0.32c");
+    fprintf(stderr, "pdftohtml.bin version %s\n", "0.33");
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
     if (!printVersion) {
       printUsage("pdftohtml", "<PDF-file> [<html-file> <xml-file>]", argDesc);
@@ -206,15 +213,48 @@ int main(int argc, char *argv[]) {
     lastPage = doc->getNumPages();
 
   // write text file
-#if JAPANESE_SUPPORT
+  /*#if JAPANESE_SUPPORT
   //useASCII7 |= useEUCJP;
-#endif
+#endif*/
   htmlOut = new HtmlOutputDev(htmlFileName->getCString(), rawOrder);
   if (htmlOut->isOk())  
     doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
   
-  delete htmlOut;
+  if( mode && !xml ) {
+    int h=xoutRound(htmlOut->getPageHeight()/scale);
+    int w=xoutRound(htmlOut->getPageWidth()/scale);
 
+    psFileName = new GString(htmlFileName->getCString());
+    psFileName->append(".ps");
+
+    globalParams->setPSPaperWidth(w);
+    globalParams->setPSPaperHeight(h);
+    globalParams->setPSNoText(gTrue);
+    psOut = new PSOutputDev(psFileName->getCString(), doc->getXRef(),
+			    doc->getCatalog(), firstPage, lastPage, psModePS);
+    doc->displayPages(psOut, firstPage, lastPage, 72, 0, gFalse);
+    delete psOut;
+
+    char buf[256];
+    sprintf(buf, "%s -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -sOutputFile=%s%%03d.png -g%dx%d -q %s", GHOSTSCRIPT, htmlFileName->getCString(), w, h,
+	    psFileName->getCString());
+    /*GString *gsCmd = new GString("gs -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -q -sOutputFile=");
+    gsCmd->append(htmlFileName);
+    gsCmd->append("%03d.png -g");
+    gsCmd->append(htmlOut->getPageWidth());
+    gsCmd->append("x");
+    gsCmd->append(htmlOut->getPageHeight());
+    gsCmd->append(" ");
+    gsCmd->append(psFileName);*/
+    if( !executeCommand(buf) && !errQuiet) {
+      error(-1, "Failed to launch Ghostscript!\n");
+    }
+    //delete gsCmd;
+    delete psFileName;
+  }
+  
+  delete htmlOut;
+  
   // clean up
   delete htmlFileName;
  err2:

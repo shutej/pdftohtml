@@ -960,11 +960,7 @@ void LZWStream::reset() {
     return;
   }
 #else // HAVE_POPEN
-#ifdef VMS
-  if (!system(zCmd->getCString())) {
-#else
-  if (system(zCmd->getCString())) {
-#endif
+  if (!executeCommand(zCmd->getCString())) {
     error(getPos(), "Couldn't execute '%s'", zCmd->getCString());
     unlink(zName->getCString());
     delete zName;

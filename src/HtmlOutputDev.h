@@ -7,8 +7,8 @@
 // Changed 1999 by G.Ovtcharov
 //========================================================================
 
-#ifndef TEXTOUTPUTDEV_H
-#define TEXTOUTPUTDEV_H
+#ifndef HTMLOUTPUTDEV_H
+#define HTMLOUTPUTDEV_H
 
 #ifdef __GNUC__
 #pragma interface
@@ -18,7 +18,7 @@
 #include "gtypes.h"
 #include "GfxFont.h"
 #include "OutputDev.h"
-#include "GVector.h" 
+//#include "GVector.h" 
 #include "HtmlLinks.h"
 #include "HtmlFonts.h"
 #include "Link.h"
@@ -30,6 +30,8 @@
 #else
 #  define SLASH '/'
 #endif
+
+#define xoutRound(x) ((int)(x + 0.5))
 
 class GfxState;
 class GString;
@@ -51,22 +53,13 @@ public:
   // Add a character to the string.
   void addChar(GfxState *state, double x, double y,
 	       double dx, double dy,
-	       //Guchar c, 
-	       Unicode u); //GBool useASCII7);
-
-  /*
-  // Add a 16-bit character to the string.
-  void addChar16(GfxState *state, double x, double y,
-		 double dx, double dy,
-		 int c, GfxFontCharSet16 charSet);
-  */
+	       Unicode u); 
 
 private:
 // aender die text variable
   double xMin, xMax;		// bounding box x coordinates
   double yMin, yMax;		// bounding box y coordinates
   int col;			// starting column
-  //GString *text;		// the text
   Unicode *text;		// the text
   double *xRight;		// right-hand x coord of each char
   HtmlString *yxNext;		// next string in y-major order
@@ -207,11 +200,6 @@ public:
 			double dx, double dy,
 			double originX, double originY,
 			CharCode code, Unicode *u, int uLen);
-  /*virtual void drawChar(GfxState *state, double x, double y,
-    double dx, double dy, Guchar c);*/
-  /*virtual void drawChar16(GfxState *state, double x, double y,
-    double dx, double dy, int c);*/
-
   
   virtual void drawImageMask(GfxState *state, Object *ref, 
 			     Stream *str,
@@ -225,19 +213,24 @@ public:
   virtual int DevType() {return 1234;}
   virtual void drawLink(Link *link,Catalog *cat); 
 
+  int getPageWidth() { return maxPageWidth; }
+  int getPageHeight() { return maxPageHeight; }
+
 private:
   GString* getLinkDest(Link *link,Catalog *catalog);
   void doFrame();
   FILE *f;			// text file
   FILE *page;                   // html file
-  FILE *tin;                    // image log file
-  GBool write;
+  //FILE *tin;                    // image log file
+  //GBool write;
   GBool needClose;		// need to close the file?
   HtmlPage *pages;		// text for the current page
   GBool rawOrder;		// keep text in content stream order
   GBool ok;			// set up ok?
   GBool dumpJPEG;
   int pageNum;
+  int maxPageWidth;
+  int maxPageHeight;
   static int imgNum;
   GString *Docname;
   friend class HtmlPage;

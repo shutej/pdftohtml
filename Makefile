@@ -9,20 +9,17 @@ EXE =
 
 all:
 	cd goo; $(MAKE)
-	cd xpdf; $(MAKE) all
+	cd xpdf; $(MAKE) 
 	cd src; $(MAKE)
-	cd src; mv pdftohtml ../pdftohtml.bin
-	cd xpdf; mv pdftops ../pdftops.bin
+	cd src; mv pdftohtml ../pdftohtml
 
 clean:
-	rm -f pdftohtml.bin
-	rm -f pdftops.bin
+	rm -f pdftohtml
 	cd goo; $(MAKE) clean
 	cd xpdf; $(MAKE) clean
 	cd src; $(MAKE) clean
 
 distdepend:
-	rm -f pdftohtml.bin
-	rm -f pdftops.bin
+	rm -f pdftohtml
 	cd goo; $(MAKE) distdepend
 	cd xpdf; $(MAKE) distdepend

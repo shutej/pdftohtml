@@ -26,6 +26,7 @@
  * Use gzip instead of uncompress.
  */
 #define USE_GZIP 1
+#define GHOSTSCRIPT "gswin32c"
 
 /*
  * Directory with the Xpdf app-defaults file.

@@ -40,3 +40,9 @@ pdftohtml 0.32b
 -ability to specify user/master password
 -fixed core dump on documents with type 3 fonts only
 -fixed bug with inline images not being handled properly
+
+pdftohtml 0.33
+==============
+-Ghostscript is executed from the program itself, no need for external script
+-ps output (for complex mode) is produced by pdftohtml, got rid of pdftops
+-several XML-related fixes
