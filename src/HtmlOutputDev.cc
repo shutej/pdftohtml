@@ -23,153 +23,12 @@
 #include "Error.h"
 #include "GfxState.h"
 #include "GlobalParams.h"
-//#include "UnicodeMap.h"
-//#include "FontEncoding.h"
 #include "HtmlOutputDev.h"
 #include "HtmlFonts.h"
 
 
-//#include "TextOutputFontInfo.h"
-
 int HtmlPage::pgNum=0;
 int HtmlOutputDev::imgNum=1;
-
-/*
-//------------------------------------------------------------------------
-// Character substitutions
-//------------------------------------------------------------------------
-
-static char *isoLatin1Subst[] = {
-  "L",                          // Lslash
-  "OE",                         // OE
-  "S",                          // Scaron
-  "Y",                          // Ydieresis
-  "Z",                          // Zcaron
-  "fi", "fl",                   // ligatures
-  "ff", "ffi", "ffl",           // ligatures
-  "i",                          // dotlessi
-  "l",                          // lslash
-  "oe",                         // oe
-  "s",                          // scaron
-  "z",                          // zcaron
-  "*",                          // bullet
-  "...",                        // ellipsis
-  "-", "-",                     // emdash, hyphen
-  "\"", "\"",                   // quotedblleft, quotedblright
-  "'",                          // quotesingle
-  "TM"                          // trademark
-};
-
-static char *ascii7Subst[] = {
-  "A", "A", "A", "A",           // A{acute,circumflex,dieresis,grave}
-  "A", "A",                     // A{ring,tilde}
-  "AE",                         // AE
-  "C",                          // Ccedilla
-  "E", "E", "E", "E",           // E{acute,circumflex,dieresis,grave}
-  "I", "I", "I", "I",           // I{acute,circumflex,dieresis,grave}
-  "L",                          // Lslash
-  "N",                          // Ntilde
-  "O", "O", "O", "O",           // O{acute,circumflex,dieresis,grave}
-  "O", "O",                     // O{slash,tilde}
-  "OE",                         // OE
-  "S",                          // Scaron
-  "U", "U", "U", "U",           // U{acute,circumflex,dieresis,grave}
-  "Y", "Y",                     // T{acute,dieresis}
-  "Z",                          // Zcaron
-  "a", "a", "a", "a",           // a{acute,circumflex,dieresis,grave}
-  "a", "a",                     // a{ring,tilde}
-  "ae",                         // ae
-  "c",                          // ccedilla
-  "e", "e", "e", "e",           // e{acute,circumflex,dieresis,grave}
-  "fi", "fl",                   // ligatures
-  "ff", "ffi", "ffl",           // ligatures
-  "i",                          // dotlessi
-  "i", "i", "i", "i",           // i{acute,circumflex,dieresis,grave}
-  "l",                          // lslash
-  "n",                          // ntilde
-  "o", "o", "o", "o",           // o{acute,circumflex,dieresis,grave}
-  "o", "o",                     // o{slash,tilde}
-  "oe",                         // oe
-  "s",                          // scaron
-  "u", "u", "u", "u",           // u{acute,circumflex,dieresis,grave}
-  "y", "y",                     // t{acute,dieresis}
-  "z",                          // zcaron
-  "|",                          // brokenbar
-  "*",                          // bullet
-  "...",                        // ellipsis
-  "-", "-", "-",                // emdash, endash, hyphen
-  "\"", "\"",                   // quotedblleft, quotedblright
-  "'",                          // quotesingle
-  "(R)",                        // registered
-  "TM"                          // trademark
-};
-
-//------------------------------------------------------------------------
-// 16-bit fonts
-//------------------------------------------------------------------------
-
-#if JAPANESE_SUPPORT
-
-// CID 0 .. 96
-static Gushort japan12Map[96] = {
-  0x2120, 0x2120, 0x212a, 0x2149, 0x2174, 0x2170, 0x2173, 0x2175, // 00 .. 07
-  0x2147, 0x214a, 0x214b, 0x2176, 0x215c, 0x2124, 0x213e, 0x2123, // 08 .. 0f
-  0x213f, 0x2330, 0x2331, 0x2332, 0x2333, 0x2334, 0x2335, 0x2336, // 10 .. 17
-  0x2337, 0x2338, 0x2339, 0x2127, 0x2128, 0x2163, 0x2161, 0x2164, // 18 .. 1f
-  0x2129, 0x2177, 0x2341, 0x2342, 0x2343, 0x2344, 0x2345, 0x2346, // 20 .. 27
-  0x2347, 0x2348, 0x2349, 0x234a, 0x234b, 0x234c, 0x234d, 0x234e, // 28 .. 2f
-  0x234f, 0x2350, 0x2351, 0x2352, 0x2353, 0x2354, 0x2355, 0x2356, // 30 .. 37
-  0x2357, 0x2358, 0x2359, 0x235a, 0x214e, 0x216f, 0x214f, 0x2130, // 38 .. 3f
-  0x2132, 0x2146, 0x2361, 0x2362, 0x2363, 0x2364, 0x2365, 0x2366, // 40 .. 47
-  0x2367, 0x2368, 0x2369, 0x236a, 0x236b, 0x236c, 0x236d, 0x236e, // 48 .. 4f
-  0x236f, 0x2370, 0x2371, 0x2372, 0x2373, 0x2374, 0x2375, 0x2376, // 50 .. 57
-  0x2377, 0x2378, 0x2379, 0x237a, 0x2150, 0x2143, 0x2151, 0x2141  // 58 .. 5f
-};
-
-// CID 325 .. 421
-static Gushort japan12KanaMap1[97] = {
-  0x2131, 0x2121, 0x2123, 0x2156, 0x2157, 0x2122, 0x2126, 0x2572,
-  0x2521, 0x2523, 0x2525, 0x2527, 0x2529, 0x2563, 0x2565, 0x2567,
-  0x2543, 0x213c, 0x2522, 0x2524, 0x2526, 0x2528, 0x252a, 0x252b,
-  0x252d, 0x252f, 0x2531, 0x2533, 0x2535, 0x2537, 0x2539, 0x253b,
-  0x253d, 0x253f, 0x2541, 0x2544, 0x2546, 0x2548, 0x254a, 0x254b,
-  0x254c, 0x254d, 0x254e, 0x254f, 0x2552, 0x2555, 0x2558, 0x255b,
-  0x255e, 0x255f, 0x2560, 0x2561, 0x2562, 0x2564, 0x2566, 0x2568,
-  0x2569, 0x256a, 0x256b, 0x256c, 0x256d, 0x256f, 0x2573, 0x212b,
-  0x212c, 0x212e, 0x2570, 0x2571, 0x256e, 0x2575, 0x2576, 0x2574,
-  0x252c, 0x252e, 0x2530, 0x2532, 0x2534, 0x2536, 0x2538, 0x253a,
-  0x253c, 0x253e, 0x2540, 0x2542, 0x2545, 0x2547, 0x2549, 0x2550,
-  0x2551, 0x2553, 0x2554, 0x2556, 0x2557, 0x2559, 0x255a, 0x255c,
-  0x255d
-};
-
-// CID 501 .. 598
-static Gushort japan12KanaMap2[98] = {
-  0x212d, 0x212f, 0x216d, 0x214c, 0x214d, 0x2152, 0x2153, 0x2154,
-  0x2155, 0x2158, 0x2159, 0x215a, 0x215b, 0x213d, 0x2121, 0x2472,
-  0x2421, 0x2423, 0x2425, 0x2427, 0x2429, 0x2463, 0x2465, 0x2467,
-  0x2443, 0x2422, 0x2424, 0x2426, 0x2428, 0x242a, 0x242b, 0x242d,
-  0x242f, 0x2431, 0x2433, 0x2435, 0x2437, 0x2439, 0x243b, 0x243d,
-  0x243f, 0x2441, 0x2444, 0x2446, 0x2448, 0x244a, 0x244b, 0x244c,
-  0x244d, 0x244e, 0x244f, 0x2452, 0x2455, 0x2458, 0x245b, 0x245e,
-  0x245f, 0x2460, 0x2461, 0x2462, 0x2464, 0x2466, 0x2468, 0x2469,
-  0x246a, 0x246b, 0x246c, 0x246d, 0x246f, 0x2473, 0x2470, 0x2471,
-  0x246e, 0x242c, 0x242e, 0x2430, 0x2432, 0x2434, 0x2436, 0x2438,
-  0x243a, 0x243c, 0x243e, 0x2440, 0x2442, 0x2445, 0x2447, 0x2449,
-  0x2450, 0x2451, 0x2453, 0x2454, 0x2456, 0x2457, 0x2459, 0x245a,
-  0x245c, 0x245d
-};
-
-static char *japan12Roman[10] = {
-  "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"
-};
-
-static char *japan12Abbrev1[6] = {
-  "mm", "cm", "km", "mg", "kg", "cc"
-};
-
-#endif
-*/
 
 extern double scale;
 extern GBool mode;
@@ -492,10 +351,13 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
   fprintf(f, "<page number=\"%d\" position=\"absolute\"", page);
   fprintf(f," top=\"0\" left=\"0\" height=\"%d\" width=\"%d\">\n", pageHeight,pageWidth);
     
-  for(int i=0;i!=fonts->size();i++)
-    fprintf(f,"\t%s\n",fonts->CSStyle(i)->getCString());
+  for(int i=0;i!=fonts->size();i++) {
+    GString *fontCSStyle = fonts->CSStyle(i);
+    fprintf(f,"\t%s\n",fontCSStyle->getCString());
+    delete fontCSStyle;
+  }
   
-  GString* str;
+  GString *str, *str1;
   for(HtmlString *tmp=yxStrings;tmp;tmp=tmp->yxNext){
     if (tmp->htext){
       str=new GString(tmp->htext);
@@ -503,10 +365,11 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
       fprintf(f,"width=\"%d\" height=\"%d\" ",xoutRound(tmp->xMax-tmp->xMin),xoutRound(tmp->yMax-tmp->yMin));
       fprintf(f,"font=\"%d\">", tmp->fontpos);
       if (tmp->fontpos!=-1){
-	str=fonts->getCSStyle(tmp->fontpos,str);
+	str1=fonts->getCSStyle(tmp->fontpos,str);
       }
-      fputs(str->getCString(),f);
-      delete str;      
+      fputs(str1->getCString(),f);
+      delete str;
+      delete str1;
       fputs("</text>\n",f);
     }
   }
@@ -516,14 +379,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
 
 void HtmlPage::dumpComplex(int page){
   FILE* f;
-  /*UnicodeMap *uMap;
-  char buf[8];
-  int n;
-  
-  // get the output encoding
-  if (!(uMap = globalParams->getTextEncoding())) {
-    return;
-    }*/
+
   GString* tmp=new GString(DocName);   
   GString* pgNum=GString::IntToStr(page);
   tmp->append('-')->append(pgNum)->append(".html");
@@ -538,14 +394,15 @@ void HtmlPage::dumpComplex(int page){
   tmp=basename(DocName);
   
   fprintf(f,"<html>\n<head>\n<title>Page %d</title>\n\n",page);
-  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n",
-	  globalParams->getTextEncodingName()->getCString());
-
+  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
   
   fputs("<style type=\"text/css\">\n<!--\n",f);
     
-  for(int i=0;i!=fonts->size();i++)
-    fprintf(f,"\t%s\n",fonts->CSStyle(i)->getCString());
+  for(int i=0;i!=fonts->size();i++) {
+    GString *fontCSStyle = fonts->CSStyle(i);
+    fprintf(f,"\t%s\n",fontCSStyle->getCString());
+    delete fontCSStyle;
+  }
     
   fputs("-->\n</style>\n",f);
   fputs("</head>\n<body vlink=\"blue\" link=\"blue\">\n",f); 
@@ -556,25 +413,19 @@ void HtmlPage::dumpComplex(int page){
   
   delete tmp;
   
-  GString* str;
+  GString *str, *str1;
   for(HtmlString *tmp1=yxStrings;tmp1;tmp1=tmp1->yxNext){
     if (tmp1->htext){
       str=new GString(tmp1->htext);
       fprintf(f,"<div style=\"position:absolute;top:%d;left:%d\">",xoutRound(tmp1->yMin),xoutRound(tmp1->xMin));
       fputs("<nobr>",f); 
       if (tmp1->fontpos!=-1){
-	str=fonts->getCSStyle(tmp1->fontpos,str);  
+	str1=fonts->getCSStyle(tmp1->fontpos,str);  
       }
-      fputs(str->getCString(),f);
+      fputs(str1->getCString(),f);
       
-      /*// print the string 
-      for (int i = 0; i < tmp1->len; ++i) {
-	if ((n = uMap->mapUnicode(tmp1->text[i], buf, sizeof(buf))) > 0) {
-	  fwrite(buf, 1, n, f);
-	}
-	}*/
-
       delete str;      
+      delete str1;
       fputs("</nobr></div>\n",f);
     }
   }
@@ -585,14 +436,6 @@ void HtmlPage::dumpComplex(int page){
 
 void HtmlPage::dump(FILE *f) {
   static int nump=0;
-  /*UnicodeMap *uMap;
-  char buf[8];
-  int n;
-  
-  // get the output encoding
-  if (!(uMap = globalParams->getTextEncoding())) {
-    return;
-    }*/
 
   nump++;
   if (mode){
@@ -610,13 +453,6 @@ void HtmlPage::dump(FILE *f) {
     GString* str;
     for(HtmlString *tmp=yxStrings;tmp;tmp=tmp->yxNext){
       if (tmp->htext){
-	/*// print the string 
-	for (int i = 0; i < tmp->len; ++i) {
-	  if ((n = uMap->mapUnicode(tmp->text[i], buf, sizeof(buf))) > 0) {
-	    fwrite(buf, 1, n, f);
-	  }
-	  }*/
-
 	str=new GString(tmp->htext); 
 	fputs(str->getCString(),f);
 	delete str;      

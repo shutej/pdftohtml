@@ -117,7 +117,7 @@ HtmlFont::HtmlFont(const HtmlFont& x){
 
 HtmlFont::~HtmlFont(){
   leak--;
-  if (!FontName) delete FontName;
+  if (FontName) delete FontName;
 }
 
 HtmlFont& HtmlFont::operator=(const HtmlFont& x){
@@ -165,7 +165,7 @@ GString* HtmlFont::getDefaultFont(){
 }
 
 // this method if plain wrong todo
-GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) { //char* s){
+GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) {
   GString *tmp = new GString();
   UnicodeMap *uMap;
   char buf[8];
@@ -193,6 +193,7 @@ GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) { //char* s){
     }
   }
 
+  uMap->decRefCnt();
   return tmp;
 }
 
@@ -267,14 +268,15 @@ GString* HtmlFontAccu::CSStyle(int i){
    HtmlFont font=*g;
    GString *Size=GString::IntToStr(font.getSize());
    GString *colorStr=font.getColor().toString();
-   
+   GString *fontName=font.getFontName();
+
    if(!xml){
      tmp->append(".ft");
      tmp->append(iStr);
      tmp->append("{font-size:");
      tmp->append(Size);
      tmp->append("px;font-family:");
-     tmp->append(font.getFontName());
+     tmp->append(fontName); //font.getFontName());
      tmp->append(";color:");
      tmp->append(colorStr);
      tmp->append(";}");
@@ -285,12 +287,13 @@ GString* HtmlFontAccu::CSStyle(int i){
      tmp->append("\" size=\"");
      tmp->append(Size);
      tmp->append("\" family=\"");
-     tmp->append(font.getFontName());
+     tmp->append(fontName); //font.getFontName());
      tmp->append("\" color=\"");
      tmp->append(colorStr);
      tmp->append("\"/>");
    }
 
+   delete fontName;
    delete colorStr;
    delete iStr;
    delete Size;

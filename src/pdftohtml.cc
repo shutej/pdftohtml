@@ -31,9 +31,6 @@
 
 static int firstPage = 1;
 static int lastPage = 0;
-/*#if JAPANESE_SUPPORT
-static GBool useEUCJP = gFalse;
-#endif*/
 static GBool rawOrder = gTrue;
 GBool printCommands = gTrue;
 static GBool printHelp = gFalse;

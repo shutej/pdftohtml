@@ -46,3 +46,4 @@ pdftohtml 0.33
 -Ghostscript is executed from the program itself, no need for external script
 -ps output (for complex mode) is produced by pdftohtml, got rid of pdftops
 -several XML-related fixes
+-several memory leaks fixed (should not crash on large files now)
