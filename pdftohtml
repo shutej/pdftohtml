@@ -2,15 +2,15 @@
 
 #### User modifiable options
 
-PDFTOHTMLBIN_DIR=$HOME/xpdf/pdftohtml_0_32
+PDFTOHTMLBIN_DIR=$HOME/xpdf/work/pdftohtml
 RM=/bin/rm
 
 #### End of User modifiable options
 
 
 function printhelp (){
-echo "pdftohtml version 0.32
-Copyright 1999-2000 Gueorgui Ovtcharov and Rainer Dorsch
+echo "pdftohtml version 0.32a
+Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch
 Usage: pdftohtml [options] <PDF-file> [<html-file>,<xml-file>]
   -f <int>      : first page to convert
   -l <int>      : last page to convert
