@@ -788,7 +788,7 @@ void HtmlOutputDev::doFrame(int firstPage){
 
 HtmlOutputDev::HtmlOutputDev(char *fileName, char *title, 
 	char *author, char *keywords, char *subject, char *date,
-	GBool rawOrder, int firstPage = 1) 
+	GBool rawOrder, int firstPage) 
 {
   char *htmlEncoding;
   
