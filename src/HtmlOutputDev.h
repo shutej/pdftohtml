@@ -32,7 +32,7 @@
 
 #define xoutRound(x) ((int)(x + 0.5))
 
-#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.33a\">"
+#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.33b\">"
 
 class GfxState;
 class GString;
@@ -55,9 +55,11 @@ public:
   void addChar(GfxState *state, double x, double y,
 	       double dx, double dy,
 	       Unicode u); 
+  HtmlLink* getLink() { return link; }
 
 private:
 // aender die text variable
+  HtmlLink *link;
   double xMin, xMax;		// bounding box x coordinates
   double yMin, yMax;		// bounding box y coordinates
   int col;			// starting column

@@ -16,6 +16,7 @@ GOOSRCDIR = $(srcdir)/../goo
 GOOLIBDIR = ../goo
 
 CXXFLAGS = -g -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) 
+#-DDEBUG_MEM
 
 CC = gcc
 CXX = c++

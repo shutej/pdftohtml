@@ -31,6 +31,10 @@ HtmlLink::~HtmlLink(){
  if (dest) delete dest;
 }
 
+GBool HtmlLink::isEqualDest(const HtmlLink& x) const{
+  return (!strcmp(dest->getCString(), x.dest->getCString()));
+}
+
 GBool HtmlLink::inLink(double xmin,double ymin,double xmax,double ymax) const {
   double y=(ymin+ymax)/2;
   if (y>Ymax) return gFalse;
@@ -49,16 +53,23 @@ HtmlLink& HtmlLink::operator=(const HtmlLink& x){
   return *this;
 } 
 
-GString* HtmlLink::Link(GString* content){
-  GString* _dest=new GString(dest);
-   GString *tmp=new GString("<a href=\"");
-   tmp->append(_dest);
-   tmp->append("\">");
-   tmp->append(content);
-   tmp->append("</a>");
-   delete _dest;
-   return tmp;
+GString* HtmlLink::getLinkStart() {
+  GString *res = new GString("<a href=\"");
+  res->append(dest);
+  res->append("\">");
+  return res;
 }
+
+/*GString* HtmlLink::Link(GString* content){
+  //GString* _dest=new GString(dest);
+  GString *tmp=new GString("<a href=\"");
+  tmp->append(dest);
+  tmp->append("\">");
+  tmp->append(content);
+  tmp->append("</a>");
+  //delete _dest;
+  return tmp;
+  }*/
 
    
 

@@ -43,6 +43,7 @@ GBool noframes=gFalse;
 GBool stout=gFalse;
 GBool xml=gFalse;
 GBool errQuiet=gFalse;
+GBool showHidden = gFalse;
 static char ownerPassword[33] = "";
 static char userPassword[33] = "";
 static GBool printVersion = gFalse;
@@ -58,10 +59,6 @@ static ArgDesc argDesc[] = {
    "last page to convert"},
   /*{"-raw",    argFlag,     &rawOrder,      0,
     "keep strings in content stream order"},*/
-  /*#if JAPANESE_SUPPORT
-  {"-eucjp",  argFlag,     &useEUCJP,      0,
-   "convert Japanese text to EUC-JP"},
-   #endif*/
   {"-q",      argFlag,     &errQuiet,      0,
    "don't print any messages or errors"},
   {"-h",      argFlag,     &printHelp,     0,
@@ -78,10 +75,12 @@ static ArgDesc argDesc[] = {
    "generate no frames"},
   {"-stdout"  ,argFlag,    &stout,         0,
    "use standard output"},
-  {"-zoom"   ,argFP,    &scale,         0,
+  {"-zoom",   argFP,    &scale,         0,
    "zoom the pdf document (default 1.5)"},
-  {"-xml"  ,argFlag,    &xml,         0,
+  {"-xml",    argFlag,    &xml,         0,
    "output for XML post-processing"},
+  {"-hidden", argFlag,   &showHidden,   0,
+   "output hidden text"},
   {"-enc",    argString,   textEncName,    sizeof(textEncName),
    "output text encoding name"},
   {"-v",      argFlag,     &printVersion,  0,
@@ -109,7 +108,7 @@ int main(int argc, char *argv[]) {
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/\n", "0.33a");
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/\n", "0.33b");
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "based on Xpdf version %s\n", xpdfVersion);
     fprintf(stderr, "%s\n\n", xpdfCopyright);
@@ -228,9 +227,11 @@ int main(int argc, char *argv[]) {
   if (htmlOut->isOk())  
     doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
   
-  if( mode && !xml ) {
+  if( mode && !xml && !ignore ) {
     int h=xoutRound(htmlOut->getPageHeight()/scale);
     int w=xoutRound(htmlOut->getPageWidth()/scale);
+    //int h=xoutRound(doc->getPageHeight(1)/scale);
+    //int w=xoutRound(doc->getPageWidth(1)/scale);
 
     psFileName = new GString(htmlFileName->getCString());
     psFileName->append(".ps");
@@ -264,6 +265,7 @@ int main(int argc, char *argv[]) {
     if( !executeCommand(gsCmd->getCString()) && !errQuiet) {
       error(-1, "Failed to launch Ghostscript!\n");
     }
+    unlink(psFileName->getCString());
     delete tw;
     delete th;
     delete gsCmd;

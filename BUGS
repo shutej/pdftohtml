@@ -15,3 +15,7 @@ specify rotation to ghostscript when needed.
 * For demo1.pdf first font is there twice. This is because we keep separete 
 fonts for <b> and <i> even though they are otherwise identical. Not really 
 a problem, just ugly.
+
+* command line options for directory where to put extracted images
+
+* command line option to keep complex output in one page

@@ -39,6 +39,7 @@ extern GBool printHtml;
 extern GBool noframes;
 extern GBool stout;
 extern GBool xml;
+extern GBool showHidden;
 
 
 //------------------------------------------------------------------------
@@ -89,6 +90,7 @@ HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
   col = 0;
   text = NULL;
   xRight = NULL;
+  link = NULL;
   len = size = 0;
   yxNext = NULL;
   xyNext = NULL;
@@ -178,17 +180,13 @@ void HtmlPage::updateFont(GfxState *state) {
 
 void HtmlPage::beginString(GfxState *state, GString *s) {
   curStr = new HtmlString(state, fontSize, fonts);
-  if(!pageWidth) {
-      pageWidth=static_cast<int>(state->getPageWidth());
-      pageHeight=static_cast<int>(state->getPageHeight());
-  }
 }
 
 
 void HtmlPage::conv(){
   HtmlString *tmp;
 
-  int k=0;
+  int linkIndex = 0;
   HtmlFont h;
   for(tmp=yxStrings;tmp;tmp=tmp->yxNext){
      int pos=tmp->fontpos;
@@ -198,10 +196,11 @@ void HtmlPage::conv(){
      if (tmp->htext) delete tmp->htext; 
      tmp->htext=HtmlFont::simple(h,tmp->text,tmp->len);
 
-     if (links->inLink(tmp->xMin,tmp->yMin,tmp->xMax,tmp->yMax,k)){
-       GString *t=tmp->htext;
+     if (links->inLink(tmp->xMin,tmp->yMin,tmp->xMax,tmp->yMax, linkIndex)){
+       tmp->link = links->getLink(linkIndex);
+       /*GString *t=tmp->htext;
        tmp->htext=links->getLink(k)->Link(tmp->htext);
-       delete t;
+       delete t;*/
      }
   }
 
@@ -311,6 +310,12 @@ void HtmlPage::coalesce() {
     str1->htext->insert(0,"<b>",3);
   if( hfont1.isItalic() )
     str1->htext->insert(0,"<i>",3);
+  if( str1->getLink() != NULL ) {
+    GString *ls = str1->getLink()->getLinkStart();
+    str1->htext->insert(0, ls);
+    delete ls;
+  }
+
   while (str1 && (str2 = str1->yxNext)) {
     hfont2 = getFont(str2);
     space = str1->yMax - str1->yMin;
@@ -353,7 +358,22 @@ void HtmlPage::coalesce() {
       if( !hfont1.isItalic() && hfont2.isItalic() )
 	str1->htext->append("<i>", 3);
 
+      /* now handle switch of links */
+      HtmlLink *hlink1 = str1->getLink();
+      HtmlLink *hlink2 = str2->getLink();
+      if( !hlink1 || !hlink2 || !hlink1->isEqualDest(*hlink2) ) {
+	if(hlink1 != NULL )
+	  str1->htext->append("</a>");
+	if(hlink2 != NULL ) {
+	  GString *ls = hlink2->getLinkStart();
+	  str1->htext->append(ls);
+	  delete ls;
+	}
+      }
+
       str1->htext->append(str2->htext);
+      // str1 now contains href for link of str2 (if it is defined)
+      str1->link = str2->link; 
       hfont1 = hfont2;
       if (str2->xMax > str1->xMax) {
 	str1->xMax = str2->xMax;
@@ -368,18 +388,28 @@ void HtmlPage::coalesce() {
 	str1->htext->append("</b>",4);
       if( hfont1.isItalic() )
 	str1->htext->append("</i>",4);
+      if(str1->getLink() != NULL )
+	str1->htext->append("</a>");
+      
       str1 = str2;
       hfont1 = hfont2;
       if( hfont1.isBold() )
 	str1->htext->insert(0,"<b>",3);
       if( hfont1.isItalic() )
 	str1->htext->insert(0,"<i>",3);
+      if( str1->getLink() != NULL ) {
+	GString *ls = str1->getLink()->getLinkStart();
+	str1->htext->insert(0, ls);
+	delete ls;
+      }
     }
   }
   if( hfont1.isBold() )
     str1->htext->append("</b>",4);
   if( hfont1.isItalic() )
     str1->htext->append("</i>",4);
+  if(str1->getLink() != NULL )
+    str1->htext->append("</a>");
 }
 
 void HtmlPage::dumpAsXML(FILE* f,int page){  
@@ -442,9 +472,11 @@ void HtmlPage::dumpComplex(int page){
   fputs("-->\n</style>\n",f);
   fputs("</head>\n<body vlink=\"blue\" link=\"blue\">\n",f); 
 
-  fputs("<div style=\"position:absolute;top:0;left:0\">",f);
-  fprintf(f,"<img width=\"%d\" height=\"%d\" src=\"%s%03d.png\">",pageWidth,pageHeight,tmp->getCString(),page);
-  fputs("</div>",f);
+  if( !ignore ) {
+    fputs("<div style=\"position:absolute;top:0;left:0\">",f);
+    fprintf(f,"<img width=\"%d\" height=\"%d\" src=\"%s%03d.png\">",pageWidth,pageHeight,tmp->getCString(),page);
+    fputs("</div>",f);
+  }
   
   delete tmp;
   
@@ -699,16 +731,20 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
 
   GString *str=basename(Docname);
   pages->clear(); 
-    if(!noframes){
-      if (f){
-	if (mode)
-	  fprintf(f,"<a href=\"%s-%d.html\"",str->getCString(),pageNum);
-	else 
-	  fprintf(f,"<a href=\"%ss.html#%d\"",str->getCString(),pageNum);
-	fprintf(f," target=\"rechts\" >Page %d</a>\n",pageNum);
-      }
+  if(!noframes){
+    if (f){
+      if (mode)
+	fprintf(f,"<a href=\"%s-%d.html\"",str->getCString(),pageNum);
+      else 
+	fprintf(f,"<a href=\"%ss.html#%d\"",str->getCString(),pageNum);
+      fprintf(f," target=\"rechts\" >Page %d</a>\n",pageNum);
     }
-    delete str;
+  }
+
+  pages->pageWidth=static_cast<int>(state->getPageWidth());
+  pages->pageHeight=static_cast<int>(state->getPageHeight());
+
+  delete str;
 } 
 
 
@@ -722,11 +758,8 @@ void HtmlOutputDev::endPage() {
   // seems very inefficient. So for now I'll just use last page's size
   maxPageWidth = pages->pageWidth;
   maxPageHeight = pages->pageHeight;
-  // reset page width and height so that it will be updated for the new page
-  pages->pageWidth=0;
-  pages->pageHeight=0;
   
-if(!noframes&&!xml) fputs("<br>", f);
+  if(!noframes&&!xml) fputs("<br>", f);
   if(!stout && !globalParams->getErrQuiet()) printf("Page-%d\n",(pageNum));
   pageNum++ ;
 }
@@ -748,7 +781,7 @@ void HtmlOutputDev::drawChar(GfxState *state, double x, double y,
 	      double originX, double originY,
 	      CharCode code, Unicode *u, int uLen) 
 {
-  if ((state->getRender() & 3) == 3) {
+  if ( !showHidden && (state->getRender() & 3) == 3) {
     return;
   }
   pages->addChar(state, x, y, dx, dy, u, uLen);
