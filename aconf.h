@@ -51,6 +51,7 @@
 /* #undef HAVE_BSTRING_H */
 #define HAVE_POPEN 1
 #define HAVE_MKSTEMP 1
+#define HAVE_MKSTEMPS 1
 /* #undef SELECT_TAKES_INT */
 
 /*

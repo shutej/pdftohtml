@@ -73,11 +73,22 @@ HtmlFont::HtmlFont(GString* ftname,int _size,GfxRGB rgb){
   //if (col) color=HtmlFontColor(col); 
   //else color=HtmlFontColor();
   color=HtmlFontColor(rgb);
-  GString *fontname=new GString(ftname);
+
+  GString *fontname = NULL;
+
+  if( ftname ){
+    fontname = new GString(ftname);
+    FontName=new GString(ftname);
+  }
+  else {
+    fontname = NULL;
+    FontName = NULL;
+  }
+  
   size=(_size-1);
   italic = gFalse;
   bold = gFalse;
-  FontName=new GString(ftname);
+
   if (fontname){
     if (strstr(fontname->lowerCase()->getCString(),"bold"))  bold=gTrue;
     
@@ -100,7 +111,7 @@ HtmlFont::HtmlFont(const HtmlFont& x){
    bold=x.bold;
    pos=x.pos;
    color=x.color;
-   FontName=new GString(x.FontName);
+   if (x.FontName) FontName=new GString(x.FontName);
  }
 
 
@@ -117,7 +128,7 @@ HtmlFont& HtmlFont::operator=(const HtmlFont& x){
    pos=x.pos;
    color=x.color;
    if (FontName) delete FontName;
-   FontName=new GString(x.FontName);
+   if (x.FontName) FontName=new GString(x.FontName);
    return *this;
 }
 
@@ -138,7 +149,9 @@ GString* HtmlFont::getFontName(){
 }
 
 GString* HtmlFont::getFullName(){
-  return new GString(FontName);
+  if (FontName)
+    return new GString(FontName);
+  else return new GString(DefaultFont);
 } 
 
 void HtmlFont::setDefaultFont(GString* defaultFont){

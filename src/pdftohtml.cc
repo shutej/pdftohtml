@@ -28,7 +28,6 @@
 
 static int firstPage = 1;
 static int lastPage = 0;
-static GBool useASCII7 = gFalse;
 #if JAPANESE_SUPPORT
 static GBool useEUCJP = gFalse;
 #endif
@@ -44,6 +43,9 @@ GBool noframes=gFalse;
 GBool stout=gFalse;
 GBool xml=gFalse;
 GBool errQuiet=gFalse;
+static char ownerPassword[33] = "";
+static char userPassword[33] = "";
+static GBool printVersion = gFalse;
 
 static char textEncName[128] = "";
 
@@ -78,6 +80,12 @@ static ArgDesc argDesc[] = {
    "output for XML post-processing"},
   {"-enc",    argString,   textEncName,    sizeof(textEncName),
    "output text encoding name"},
+  {"-v",      argFlag,     &printVersion,  0,
+   "print copyright and version info"},
+  {"-opw",    argString,   ownerPassword,  sizeof(ownerPassword),
+   "owner password (for encrypted files)"},
+  {"-upw",    argString,   userPassword,   sizeof(userPassword),
+   "user password (for encrypted files)"},
   {NULL}
 };
 
@@ -88,13 +96,16 @@ int main(int argc, char *argv[]) {
   HtmlOutputDev *htmlOut;
   GBool ok;
   char *p;
+  GString *ownerPW, *userPW;
 
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
-  if (!ok || argc < 2 || argc > 3 || printHelp) {
-    fprintf(stderr, "pdftohtml.bin version %s\n", "0.32a");
+  if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
+    fprintf(stderr, "pdftohtml.bin version %s\n", "0.32b");
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
-    printUsage("pdftohtml", "<PDF-file> [<html-file> <xml-file>]", argDesc);
+    if (!printVersion) {
+      printUsage("pdftohtml", "<PDF-file> [<html-file> <xml-file>]", argDesc);
+    }
     exit(1);
   }
   fileName = new GString(argv[1]);
@@ -104,7 +115,6 @@ int main(int argc, char *argv[]) {
 
   // read config file
   globalParams = new GlobalParams("");
-  //initParams(xpdfConfigFile);
 
   if (errQuiet) {
     globalParams->setErrQuiet(errQuiet);
@@ -117,8 +127,23 @@ int main(int argc, char *argv[]) {
 
 
   // open PDF file
-  //xref = NULL;
-  doc = new PDFDoc(fileName, NULL, NULL);
+  if (ownerPassword[0]) {
+    ownerPW = new GString(ownerPassword);
+  } else {
+    ownerPW = NULL;
+  }
+  if (userPassword[0]) {
+    userPW = new GString(userPassword);
+  } else {
+    userPW = NULL;
+  }
+  doc = new PDFDoc(fileName, ownerPW, userPW);
+  if (userPW) {
+    delete userPW;
+  }
+  if (ownerPW) {
+    delete ownerPW;
+  }
   if (!doc->isOk()) {
     goto err1;
   }
@@ -182,9 +207,9 @@ int main(int argc, char *argv[]) {
 
   // write text file
 #if JAPANESE_SUPPORT
-  useASCII7 |= useEUCJP;
+  //useASCII7 |= useEUCJP;
 #endif
-  htmlOut = new HtmlOutputDev(htmlFileName->getCString(), useASCII7, rawOrder);
+  htmlOut = new HtmlOutputDev(htmlFileName->getCString(), rawOrder);
   if (htmlOut->isOk())  
     doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
   

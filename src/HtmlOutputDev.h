@@ -43,7 +43,7 @@ class HtmlString {
 public:
 
   // Constructor.
-  HtmlString(GfxState *state, GBool hexCodes1,HtmlFontAccu* fonts);
+  HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts);
 
   // Destructor.
   ~HtmlString();
@@ -71,7 +71,6 @@ private:
   double *xRight;		// right-hand x coord of each char
   HtmlString *yxNext;		// next string in y-major order
   HtmlString *xyNext;		// next string in x-major order
-  GBool hexCodes;		// subsetted font with hex char codes
   int fontpos;
   GString* htext;
   int len;			// length of text and xRight
@@ -92,23 +91,19 @@ class HtmlPage {
 public:
 
   // Constructor.
-  HtmlPage(GBool useASCII7, GBool rawOrder);
+  HtmlPage(GBool rawOrder);
 
   // Destructor.
   ~HtmlPage();
 
   // Begin a new string.
-  void beginString(GfxState *state, GString *s, GBool hex1);
+  void beginString(GfxState *state, GString *s);
 
   // Add a character to the current string.
   void addChar(GfxState *state, double x, double y,
 	       double dx, double dy, Unicode *u, int uLen); //Guchar c);
 
-  /*
-  // Add a 16-bit character to the current string.
-  void addChar16(GfxState *state, double x, double y,
-		 double dx, double dy, int c,
-    GfxFontCharSet16 charSet);*/
+  void updateFont(GfxState *state);
 
   // End the current string, sorting it into the list of strings.
   void endString();
@@ -139,8 +134,8 @@ public:
   
   void conv();
 private:
-
-  GBool useASCII7;		// use 7-bit ASCII?
+  
+  double fontSize;		// current font size
   GBool rawOrder;		// keep strings in content stream order
 
   HtmlString *curStr;		// currently active string
@@ -177,7 +172,7 @@ public:
   // 8-bit ISO Latin-1.  <useASCII7> should also be set for Japanese
   // (EUC-JP) text.  If <rawOrder> is true, the text is kept in content
   // stream order.
-  HtmlOutputDev(char *fileName, GBool useASCII7, GBool rawOrder);
+  HtmlOutputDev(char *fileName, GBool rawOrder);
 
   // Destructor.
   virtual ~HtmlOutputDev();
@@ -203,7 +198,7 @@ public:
   virtual void endPage();
 
   //----- update text state
-  //virtual void updateFont(GfxState *state);
+  virtual void updateFont(GfxState *state);
 
   //----- text drawing
   virtual void beginString(GfxState *state, GString *s);
@@ -240,7 +235,6 @@ private:
   GBool needClose;		// need to close the file?
   HtmlPage *pages;		// text for the current page
   GBool rawOrder;		// keep text in content stream order
-  GBool hexCodes;		// subsetted font with hex char codes
   GBool ok;			// set up ok?
   GBool dumpJPEG;
   int pageNum;

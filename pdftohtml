@@ -113,7 +113,7 @@ if [ x$IGNOREIMAGES = "x" ]; then
 
     cd $DIR
 
-    echo $PAPER_ROTATE |gs -sDEVICE=png256 -g${PAPER_WIDTH}x${PAPER_HEIGHT} -r72 -sOutputFile=$HEAD%03d.png -q -  $PSFILE
+    echo $PAPER_ROTATE |gs -sDEVICE=png16m -g${PAPER_WIDTH}x${PAPER_HEIGHT} -r72 -sOutputFile=$HEAD%03d.png -q -  $PSFILE
     
     rm $PSFILE
 fi

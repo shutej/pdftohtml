@@ -207,31 +207,36 @@ GString* Dirname(GString* str){
   return new GString();
 } 
 
-HtmlString::HtmlString(GfxState *state, GBool hexCodes1,HtmlFontAccu* fonts) {
-  double x, y, h;
-  int f;
+HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
+  GfxFont *font;
+  double x, y;
+
   state->transform(state->getCurX(), state->getCurY(), &x, &y);
-  h = state->getTransformedFontSize();
-  //~ yMin/yMax computation should use font ascent/descent values
-  yMin = y - 0.95 * h;
-  yMax = yMin + 1.3 * h;
-  col = 0;
-  text = NULL; //new GString();
-  if (h<7) h=7;
-  if (state->getFont()->getName()) {
+  if ((font = state->getFont())) {
+    yMin = y - font->getAscent() * fontSize;
+    yMax = y - font->getDescent() * fontSize;
     GfxRGB rgb;
     state->getFillRGB(&rgb);
-    HtmlFont hfont=HtmlFont(state->getFont()->getName(),static_cast<int>(h-1),rgb);
+    GString *name = state->getFont()->getName();
+    if (!name) name = new GString("default");
+    HtmlFont hfont=HtmlFont(name, static_cast<int>(fontSize-1), rgb);
     fontpos=fonts->AddFont(hfont);
+  } else {
+    // this means that the PDF file draws text without a current font,
+    // which should never happen
+    yMin = y - 0.95 * fontSize;
+    yMax = y + 0.35 * fontSize;
+    fontpos=0;
   }
-  else  fontpos=0;
+  col = 0;
+  text = NULL;
   xRight = NULL;
+  len = size = 0;
   yxNext = NULL;
   xyNext = NULL;
-  hexCodes = hexCodes1;
   htext=new GString();
-  len = size = 0;
 }
+
 
 HtmlString::~HtmlString() {
   delete text;
@@ -260,8 +265,7 @@ void HtmlString::addChar(GfxState *state, double x, double y,
 // HtmlPage
 //------------------------------------------------------------------------
 
-HtmlPage::HtmlPage(GBool useASCII7, GBool rawOrder) {
-  this->useASCII7 = useASCII7;
+HtmlPage::HtmlPage(GBool rawOrder) {
   this->rawOrder = rawOrder;
   curStr = NULL;
   yxStrings = NULL;
@@ -282,8 +286,40 @@ HtmlPage::~HtmlPage() {
   
 }
 
-void HtmlPage::beginString(GfxState *state, GString *s, GBool hexCodes) {
-  curStr = new HtmlString(state, hexCodes,fonts);
+void HtmlPage::updateFont(GfxState *state) {
+  GfxFont *font;
+  double *fm;
+  char *name;
+  int code;
+
+  // adjust the font size
+  fontSize = state->getTransformedFontSize();
+  if ((font = state->getFont()) && font->getType() == fontType3) {
+    // This is a hack which makes it possible to deal with some Type 3
+    // fonts.  The problem is that it's impossible to know what the
+    // base coordinate system used in the font is without actually
+    // rendering the font.  This code tries to guess by looking at the
+    // width of the character 'm' (which breaks if the font is a
+    // subset that doesn't contain 'm').
+    for (code = 0; code < 256; ++code) {
+      if ((name = ((Gfx8BitFont *)font)->getCharName(code)) &&
+	  name[0] == 'm' && name[1] == '\0') {
+	break;
+      }
+    }
+    if (code < 256) {
+      // 600 is a generic average 'm' width -- yes, this is a hack
+      fontSize *= ((Gfx8BitFont *)font)->getWidth(code) / 0.6;
+    }
+    fm = font->getFontMatrix();
+    if (fm[0] != 0) {
+      fontSize *= fabs(fm[3] / fm[0]);
+    }
+  }
+}
+
+void HtmlPage::beginString(GfxState *state, GString *s) {
+  curStr = new HtmlString(state, fontSize, fonts);
   if(!pageWidth) {
       pageWidth=static_cast<int>(state->getPageWidth());
       pageHeight=static_cast<int>(state->getPageHeight());
@@ -324,7 +360,7 @@ void HtmlPage::addChar(GfxState *state, double x, double y,
   if (n > 0 &&
       x1 - curStr->xRight[n-1] > 0.1 * (curStr->yMax - curStr->yMin)) {
     endString();
-    beginString(state, NULL, false);
+    beginString(state, NULL);
   }
   state->textTransformDelta(state->getCharSpace() * state->getHorizScaling(),
 			    0, &dx2, &dy2);
@@ -338,29 +374,6 @@ void HtmlPage::addChar(GfxState *state, double x, double y,
   }
 }
 
-/*
-void HtmlPage::addChar16(GfxState *state, double x, double y,
-                         double dx, double dy, int c,
-                         GfxFontCharSet16 charSet) {
-  double x1, y1, w1, h1, dx2, dy2;
-  int n;
-  GBool hexCodes;
-
-  state->transform(x, y, &x1, &y1);
-  state->textTransformDelta(state->getCharSpace(), 0, &dx2, &dy2);
-  dx -= dx2;
-  dy -= dy2;
-  state->transformDelta(dx, dy, &w1, &h1);
-  n = curStr->text->getLength();
-  if (n > 0 &&
-      x1 - curStr->xRight[n-1] > 0.1 * (curStr->yMax - curStr->yMin)) {
-    hexCodes = curStr->hexCodes;
-    endString();
-    beginString(state, NULL, hexCodes);
-  }
-  curStr->addChar16(state, x1, y1, w1, h1, c, charSet);
-}
-*/
 void HtmlPage::endString() {
   HtmlString *p1, *p2;
   double h, y1, y2;
@@ -740,7 +753,7 @@ void HtmlOutputDev::doFrame(){
 
 }
 
-HtmlOutputDev::HtmlOutputDev(char *fileName, GBool useASCII7, GBool rawOrder) {
+HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
   f=NULL;
   pages = NULL;
   dumpJPEG=gTrue;
@@ -751,7 +764,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool useASCII7, GBool rawOrder) {
   pageNum=1;
   // open file
   needClose = gFalse;
-  pages = new HtmlPage(useASCII7, rawOrder);
+  pages = new HtmlPage(rawOrder);
 
   pages->setDocName(fileName);
   Docname=new GString (fileName);
@@ -887,34 +900,12 @@ void HtmlOutputDev::endPage() {
   pageNum++ ;
 }
 
-/*void HtmlOutputDev::updateFont(GfxState *state) {
-  GfxFont *font;
-  char *charName;
-  int c;
-
-  // look for hex char codes in subsetted font
-  hexCodes = gFalse;
-  if ((font = state->getFont()) && !font->is16Bit()) {
-    for (c = 0; c < 256; ++c) {
-      if ((charName = font->getCharName(c))) {
-	if ((charName[0] == 'B' || charName[0] == 'C' ||
-	     charName[0] == 'G') &&
-	    strlen(charName) == 3 &&
-	    ((charName[1] >= 'a' && charName[1] <= 'f') ||
-	     (charName[1] >= 'A' && charName[1] <= 'F') ||
-	     (charName[2] >= 'a' && charName[2] <= 'f') ||
-	     (charName[2] >= 'A' && charName[2] <= 'F'))) {
-	  hexCodes = gTrue;
-	  break;
-	}
-      }
-    }
-  }
+void HtmlOutputDev::updateFont(GfxState *state) {
+  pages->updateFont(state);
 }
-*/
 
 void HtmlOutputDev::beginString(GfxState *state, GString *s) {
-  pages->beginString(state, s, hexCodes);
+  pages->beginString(state, s);
 }
 
 void HtmlOutputDev::endString(GfxState *state) {
@@ -929,28 +920,16 @@ void HtmlOutputDev::drawChar(GfxState *state, double x, double y,
   pages->addChar(state, x, y, dx, dy, u, uLen);
 }
 
-/*void HtmlOutputDev::drawChar16(GfxState *state, double x, double y,
-			       double dx, double dy, int c) {
-  pages->addChar16(state, x, y, dx, dy, c, state->getFont()->getCharSet16());
-}
-*/
-
 void HtmlOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str,
 			      int width, int height, GBool invert,
 			      GBool inlineImg) {
 
   int i, j;
   
-  if (inlineImg) {
-    str->reset();
-    j = height * ((width + 7) / 8);
-    for (i = 0; i < j; ++i)
-      str->getChar();
-    str->close();
+  if (ignore||mode) {
+    OutputDev::drawImageMask(state, ref, str, width, height, invert, inlineImg);
     return;
   }
-
-  if (ignore||mode) return;
   
   FILE *f1;
   int c;
@@ -1027,6 +1006,9 @@ void HtmlOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str,
   if (imgnum) delete imgnum;
   if (fName) delete fName;
   }
+  else {
+    OutputDev::drawImageMask(state, ref, str, width, height, invert, inlineImg);
+  }
 }
 
 void HtmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
@@ -1035,17 +1017,11 @@ void HtmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
 
   int i, j;
    
-  if (inlineImg) {
-    str->reset();
-    j = height * ((width * colorMap->getNumPixelComps() *
-		   colorMap->getBits() + 7) / 8);
-    for (i = 0; i < j; ++i)
-      str->getChar();
-    str->close();
+  if (ignore||mode) {
+    OutputDev::drawImage(state, ref, str, width, height, colorMap, 
+			 maskColors, inlineImg);
     return;
   }
-
-  if (ignore||mode) return;
 
   FILE *f1;
   ImageStream *imgStr;
@@ -1129,6 +1105,10 @@ void HtmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
     delete fName;
     delete pgNum;
     delete imgnum;
+  }
+  else {
+    OutputDev::drawImage(state, ref, str, width, height, colorMap,
+			 maskColors, inlineImg);
   }
 }
 
