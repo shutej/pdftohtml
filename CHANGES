@@ -62,3 +62,7 @@ pdftohtml 0.34
 -fixed a crash
 -updated Xpdf to 1.01
 -can produce noframes (single html file) output for complex mode
+
+pdftohtml 0.34a
+===============
+-somewhat better HTML 4.01 compliance

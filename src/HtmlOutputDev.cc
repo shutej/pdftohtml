@@ -523,7 +523,8 @@ void HtmlPage::dumpComplex(FILE *file, int page){
       } 
       delete tmp;
 
-      fprintf(pageFile,"<html>\n<head>\n<title>Page %d</title>\n\n",page);
+      fprintf(pageFile,"%s\n<html>\n<head>\n<title>Page %d</title>\n\n",
+	      DOCTYPE, page);
       fprintf(pageFile, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
       fprintf(pageFile, "%s\n", GENERATOR);
   }
@@ -553,7 +554,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   if( !ignore ) {
     //fputs("<div style=\"position:absolute;top:0;left:0\">",pageFile);
     fprintf(pageFile,
-	    "<img width=\"%d\" height=\"%d\" src=\"%s%03d.png\">",
+	    "<img width=\"%d\" height=\"%d\" src=\"%s%03d.png\" alt=\"background image\">",
 	    pageWidth,pageHeight,tmp->getCString(),page);
     //fputs("</div>",pageFile);
   }
@@ -663,8 +664,28 @@ void HtmlPage::setDocName(char *fname){
 // HtmlOutputDev
 //------------------------------------------------------------------------
 
+static char* HtmlEncodings[][2] = {
+    {"Latin1", "ISO-8859-1"},
+    {NULL, NULL}
+};
+
+
+GString* HtmlOutputDev::mapEncodingToHtml(GString* encoding)
+{
+    char* enc = encoding->getCString();
+    for(int i = 0; HtmlEncodings[i][0] != NULL; i++)
+    {
+	if( strcmp(enc, HtmlEncodings[i][0]) == 0 )
+	{
+	    return new GString(HtmlEncodings[i][1]);
+	}
+    }
+    return new GString(encoding); 
+}
+
 void HtmlOutputDev::doFrame(){
   GString* fName=new GString(Docname);
+  GString* htmlEncoding;
   fName->append(".html");
 
   if (!(f = fopen(fName->getCString(), "w"))){
@@ -676,17 +697,21 @@ void HtmlOutputDev::doFrame(){
   delete fName;
     
   fName=basename(Docname);
+  fputs(DOCTYPE_FRAMES, f);
   fputs("<html>",f);
   fputs("<head>",f);
   fprintf(f,"<title>%s</title>",docTitle->getCString());//fName->getCString());
-  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
+  htmlEncoding = mapEncodingToHtml(globalParams->getTextEncodingName());
+  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
+  delete htmlEncoding;
   fprintf(f, "%s\n", GENERATOR);
   fprintf(f, "</head>\n");
-  fputs("<frameset border=3 frameborder=\"yes\" framespacing=2 cols=\" 100,* \"\n>",f);
-  fprintf(f,"<frame name=\"links\" src=\"%s_ind.html\" target=\"rechts\">\n",fName->getCString());
+  fputs("<frameset cols=\" 100,* \"\n>",f);
+  fprintf(f,"<frame name=\"links\" src=\"%s_ind.html\">\n",fName->getCString());
   fputs("<frame name=\"rechts\" src=",f); 
-  if (mode) fprintf(f,"\"%s-1.html\"",fName->getCString());
-    else
+  if (mode) 
+      fprintf(f,"\"%s-1.html\"",fName->getCString());
+  else
       fprintf(f,"\"%ss.html\"",fName->getCString());
   
   fputs(">\n</frameset>\n</html>\n",f);
@@ -717,12 +742,6 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
   pages->setDocName(fileName);
   Docname=new GString (fileName);
 
-  /*GString *tmp=basename(Docname);
-  if (tmp->getLength()==0) {
-    printf("Error : illegal output file");
-    exit(1);
-    }*/
-
   //Complex and simple doc with frames
   if(!xml&&!noframes){
      GString* left=new GString(fileName);
@@ -735,6 +754,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
         return;
      }
      delete left;
+     fputs(DOCTYPE, f);
      fputs("<html>\n<head>\n<title></title>\n</head>\n<body>\n",f);
      
      if(!mode){
@@ -747,6 +767,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
 	return;
        }
        delete right;
+       fputs(DOCTYPE, page);
        fputs("<html>\n<head>\n<title></title>\n</head>\n<body>\n",page);
      }
   }
@@ -769,15 +790,14 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
       fputs("<!DOCTYPE pdf2xml SYSTEM \"pdf2xml.dtd\">\n\n", page);
       fputs("<pdf2xml>\n",page);
     } else {
-      fprintf(page,"<html>\n<head>\n<title>%s</title>\n",docTitle->getCString());//tmp->getCString());
+      fprintf(page,"%s\n<html>\n<head>\n<title>%s</title>\n",
+	      DOCTYPE, docTitle->getCString());
       fprintf(page, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
       fprintf(page, "%s\n", GENERATOR);
       fprintf(page,"</head>\n");
       fprintf(page,"<body bgcolor=\"#A0A0A0\" vlink=\"blue\" link=\"blue\">\n");
     }
   }    
-  
-  //delete tmp;
 }
 
 HtmlOutputDev::~HtmlOutputDev() {

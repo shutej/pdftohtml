@@ -32,7 +32,9 @@
 
 #define xoutRound(x) ((int)(x + 0.5))
 
-#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.34\">"
+#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.34a\">"
+#define DOCTYPE "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
+#define DOCTYPE_FRAMES "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\"\n\"http://www.w3.org/TR/html4/frameset.dtd\">"
 
 class GfxState;
 class GString;
@@ -227,6 +229,7 @@ public:
 
 private:
 
+  GString* mapEncodingToHtml(GString* encoding);
   GString* getLinkDest(Link *link,Catalog *catalog);
   void doFrame();
   FILE *f;			// text file
