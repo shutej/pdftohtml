@@ -35,13 +35,16 @@ cd ..\xpdf
 %CXX% %CXXFLAGS% /c GlobalParams.cc
 %CXX% %CXXFLAGS% /c ImageOutputDev.cc
 %CXX% %CXXFLAGS% /c Lexer.cc
+%CXX% %CXXFLAGS% /c JBIG2Stream.cc
 %CXX% %CXXFLAGS% /c Link.cc
 %CXX% %CXXFLAGS% /c Annot.cc
 %CXX% %CXXFLAGS% /c PSTokenizer.cc
 %CXX% %CXXFLAGS% /c NameToCharCode.cc
 %CXX% %CXXFLAGS% /c Object.cc
+%CXX% %CXXFLAGS% /c Outline.cc
 %CXX% %CXXFLAGS% /c OutputDev.cc
 %CXX% %CXXFLAGS% /c PDFDoc.cc
+%CXX% %CXXFLAGS% /c PDFDocEncoding.cc
 %CXX% %CXXFLAGS% /c PSOutputDev.cc
 %CXX% %CXXFLAGS% /c Page.cc
 %CXX% %CXXFLAGS% /c Parser.cc
@@ -50,7 +53,7 @@ cd ..\xpdf
 %CXX% %CXXFLAGS% /c UnicodeMap.cc
 %CXX% %CXXFLAGS% /c XRef.cc
 
-%LIBPROG% /nologo /out:libxpdf.lib Array.obj BuiltinFont.obj BuiltinFontTables.obj CMap.obj Catalog.obj CharCodeToUnicode.obj Decrypt.obj Dict.obj Error.obj FontEncodingTables.obj FontFile.obj Function.obj Gfx.obj GfxFont.obj GfxState.obj GlobalParams.obj ImageOutputDev.obj Lexer.obj Link.obj NameToCharCode.obj Object.obj OutputDev.obj PDFDoc.obj PSOutputDev.obj Page.obj Parser.obj Stream.obj TextOutputDev.obj UnicodeMap.obj XRef.obj Annot.obj PSTokenizer.obj
+%LIBPROG% /nologo /out:libxpdf.lib Array.obj JBIG2Stream.obj BuiltinFont.obj BuiltinFontTables.obj CMap.obj Catalog.obj CharCodeToUnicode.obj Decrypt.obj Dict.obj Error.obj FontEncodingTables.obj FontFile.obj Function.obj Gfx.obj GfxFont.obj GfxState.obj GlobalParams.obj ImageOutputDev.obj Lexer.obj Link.obj NameToCharCode.obj Object.obj OutputDev.obj Outline.obj PDFDocEncoding.obj PDFDoc.obj PSOutputDev.obj Page.obj Parser.obj Stream.obj TextOutputDev.obj UnicodeMap.obj XRef.obj Annot.obj PSTokenizer.obj 
 
 
 cd ..\src
