@@ -11,7 +11,9 @@
 #ifndef UNICODEMAP_H
 #define UNICODEMAP_H
 
-#ifdef __GNUC__
+#include <aconf.h>
+
+#ifdef USE_GCC_PRAGMAS
 #pragma interface
 #endif
 
@@ -54,12 +56,13 @@ public:
   static UnicodeMap *parse(GString *encodingNameA);
 
   // Create a resident UnicodeMap.
-  UnicodeMap(char *encodingNameA,
+  UnicodeMap(char *encodingNameA, GBool unicodeOutA,
 	     UnicodeMapRange *rangesA, int lenA);
 
   // Create a resident UnicodeMap that uses a function instead of a
   // list of ranges.
-  UnicodeMap(char *encodingNameA, UnicodeMapFunc funcA);
+  UnicodeMap(char *encodingNameA, GBool unicodeOutA,
+	     UnicodeMapFunc funcA);
 
   ~UnicodeMap();
 
@@ -67,6 +70,8 @@ public:
   void decRefCnt();
 
   GString *getEncodingName() { return encodingName; }
+
+  GBool isUnicode() { return unicodeOut; }
 
   // Return true if this UnicodeMap matches the specified
   // <encodingNameA>.
@@ -88,6 +93,7 @@ private:
 
   GString *encodingName;
   UnicodeMapKind kind;
+  GBool unicodeOut;
   union {
     UnicodeMapRange *ranges;	// (user, resident)
     UnicodeMapFunc func;	// (func)

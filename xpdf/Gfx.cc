@@ -6,16 +6,18 @@
 //
 //========================================================================
 
-#ifdef __GNUC__
+#include <aconf.h>
+
+#ifdef USE_GCC_PRAGMAS
 #pragma implementation
 #endif
 
-#include <aconf.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 #include <math.h>
 #include "gmem.h"
+#include "GlobalParams.h"
 #include "CharTypes.h"
 #include "Object.h"
 #include "Array.h"
@@ -381,12 +383,13 @@ GBool GfxResources::lookupGState(char *name, Object *obj) {
 
 Gfx::Gfx(XRef *xrefA, OutputDev *outA, int pageNum, Dict *resDict, double dpi,
 	 PDFRectangle *box, GBool crop, PDFRectangle *cropBox, int rotate,
-	 GBool printCommandsA) {
+	 GBool (*abortCheckCbkA)(void *data),
+	 void *abortCheckCbkDataA) {
   int i;
 
   xref = xrefA;
   subPage = gFalse;
-  printCommands = printCommandsA;
+  printCommands = globalParams->getPrintCommands();
 
   // start the resource stack
   res = new GfxResources(xref, resDict, NULL);
@@ -403,6 +406,8 @@ Gfx::Gfx(XRef *xrefA, OutputDev *outA, int pageNum, Dict *resDict, double dpi,
   for (i = 0; i < 6; ++i) {
     baseMatrix[i] = state->getCTM()[i];
   }
+  abortCheckCbk = abortCheckCbkA;
+  abortCheckCbkData = abortCheckCbkDataA;
 
   // set crop box
   if (crop) {
@@ -418,12 +423,14 @@ Gfx::Gfx(XRef *xrefA, OutputDev *outA, int pageNum, Dict *resDict, double dpi,
 }
 
 Gfx::Gfx(XRef *xrefA, OutputDev *outA, Dict *resDict,
-	 PDFRectangle *box, GBool crop, PDFRectangle *cropBox) {
+	 PDFRectangle *box, GBool crop, PDFRectangle *cropBox,
+	 GBool (*abortCheckCbkA)(void *data),
+	 void *abortCheckCbkDataA) {
   int i;
 
   xref = xrefA;
   subPage = gTrue;
-  printCommands = gFalse;
+  printCommands = globalParams->getPrintCommands();
 
   // start the resource stack
   res = new GfxResources(xref, resDict, NULL);
@@ -437,6 +444,8 @@ Gfx::Gfx(XRef *xrefA, OutputDev *outA, Dict *resDict,
   for (i = 0; i < 6; ++i) {
     baseMatrix[i] = state->getCTM()[i];
   }
+  abortCheckCbk = abortCheckCbkA;
+  abortCheckCbkData = abortCheckCbkDataA;
 
   // set crop box
   if (crop) {
@@ -494,11 +503,11 @@ void Gfx::display(Object *obj, GBool topLevel) {
 void Gfx::go(GBool topLevel) {
   Object obj;
   Object args[maxArgs];
-  int numArgs;
-  int i;
+  int numArgs, i;
+  int lastAbortCheck;
 
   // scan a sequence of objects
-  updateLevel = 0;
+  updateLevel = lastAbortCheck = 0;
   numArgs = 0;
   parser->getObj(&obj);
   while (!obj.isEOF()) {
@@ -524,6 +533,16 @@ void Gfx::go(GBool topLevel) {
       if (++updateLevel >= 20000) {
 	out->dump();
 	updateLevel = 0;
+      }
+
+      // check for an abort
+      if (abortCheckCbk) {
+	if (updateLevel - lastAbortCheck > 10) {
+	  if ((*abortCheckCbk)(abortCheckCbkData)) {
+	    break;
+	  }
+	  lastAbortCheck = updateLevel;
+	}
       }
 
     // got an argument - save it
@@ -575,7 +594,7 @@ void Gfx::execOp(Object *cmd, Object args[], int numArgs) {
   int i;
 
   // find operator
-  name = cmd->getName();
+  name = cmd->getCmd();
   if (!(op = findOp(name))) {
     if (ignoreUndef == 0)
       error(getPos(), "Unknown operator '%s'", name);
@@ -1806,7 +1825,7 @@ void Gfx::doRadialShFill(GfxRadialShading *shading) {
 }
 
 void Gfx::doEndPath() {
-  if (state->isPath() && clip != clipNone) {
+  if (state->isCurPt() && clip != clipNone) {
     state->clip();
     if (clip == clipNormal) {
       out->clip(state);
@@ -2019,7 +2038,7 @@ void Gfx::doShowText(GString *s) {
   double riseX, riseY;
   CharCode code;
   Unicode u[8];
-  double x, y, dx, dy, dx2, dy2, curX, curY, tdx, tdy;
+  double x, y, dx, dy, dx2, dy2, curX, curY, tdx, tdy, lineX, lineY;
   double originX, originY, tOriginX, tOriginY;
   double oldCTM[6], newCTM[6];
   double *mat;
@@ -2063,6 +2082,8 @@ void Gfx::doShowText(GString *s) {
     state->textTransformDelta(0, state->getRise(), &riseX, &riseY);
     curX = state->getCurX();
     curY = state->getCurY();
+    lineX = state->getLineX();
+    lineY = state->getLineY();
     oldParser = parser;
     p = s->getCString();
     len = s->getLength();
@@ -2101,10 +2122,11 @@ void Gfx::doShowText(GString *s) {
       state = state->restore();
       out->restoreState(state);
       // GfxState::restore() does *not* restore the current position,
-      // so we track it here with (curX, curY)
+      // so we deal with it here using (curX, curY) and (lineX, lineY)
       curX += tdx;
       curY += tdy;
       state->moveTo(curX, curY);
+      state->textSetPos(lineX, lineY);
       p += n;
       len -= n;
     }

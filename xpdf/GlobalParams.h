@@ -1,4 +1,4 @@
-//========================================================================
+
 //
 // GlobalParams.h
 //
@@ -9,13 +9,19 @@
 #ifndef GLOBALPARAMS_H
 #define GLOBALPARAMS_H
 
-#ifdef __GNUC__
+#include <aconf.h>
+
+#ifdef USE_GCC_PRAGMAS
 #pragma interface
 #endif
 
 #include <stdio.h>
 #include "gtypes.h"
 #include "CharTypes.h"
+
+#if MULTITHREADED
+#include "GMutex.h"
+#endif
 
 class GString;
 class GList;
@@ -135,29 +141,32 @@ public:
   FILE *findToUnicodeFile(GString *name);
   DisplayFontParam *getDisplayFont(GString *fontName);
   DisplayFontParam *getDisplayCIDFont(GString *fontName, GString *collection);
-  GString *getPSFile() { return psFile; }
-  int getPSPaperWidth() { return psPaperWidth; }
-  int getPSPaperHeight() { return psPaperHeight; }
-  GBool getPSDuplex() { return psDuplex; }
-  GBool getPSNoText() { return psNoText; }
-  PSLevel getPSLevel() { return psLevel; }
+  GString *getPSFile();
+  int getPSPaperWidth();
+  int getPSPaperHeight();
+  GBool getPSDuplex();
+  GBool getPSNoText();
+  PSLevel getPSLevel();
   PSFontParam *getPSFont(GString *fontName);
   PSFontParam *getPSFont16(GString *fontName, GString *collection, int wMode);
-  GBool getPSEmbedType1() { return psEmbedType1; }
-  GBool getPSEmbedTrueType() { return psEmbedTrueType; }
-  GBool getPSEmbedCIDPostScript() { return psEmbedCIDPostScript; }
-  GBool getPSEmbedCIDTrueType() { return psEmbedCIDTrueType; }
-  GBool getPSOPI() { return psOPI; }
-  GBool getPSASCIIHex() { return psASCIIHex; }
-  GString *getTextEncodingName() { return textEncoding; }
-  EndOfLineKind getTextEOL() { return textEOL; }
+  GBool getPSEmbedType1();
+  GBool getPSEmbedTrueType();
+  GBool getPSEmbedCIDPostScript();
+  GBool getPSEmbedCIDTrueType();
+  GBool getPSOPI();
+  GBool getPSASCIIHex();
+  GString *getTextEncodingName();
+  EndOfLineKind getTextEOL();
+  GBool getTextKeepTinyChars();
   GString *findFontFile(GString *fontName, char *ext1, char *ext2);
-  GString *getInitialZoom() { return initialZoom; }
-  FontRastControl getT1libControl() { return t1libControl; }
-  FontRastControl getFreeTypeControl() { return freetypeControl; }
+  GString *getInitialZoom();
+  FontRastControl getT1libControl();
+  FontRastControl getFreeTypeControl();
   GString *getURLCommand() { return urlCommand; }
-  GBool getMapNumericCharNames() { return mapNumericCharNames; }
-  GBool getErrQuiet() { return errQuiet; }
+  GString *getMovieCommand() { return movieCommand; }
+  GBool getMapNumericCharNames();
+  GBool getPrintCommands();
+  GBool getErrQuiet();
 
   CharCodeToUnicode *getCIDToUnicode(GString *collection);
   UnicodeMap *getUnicodeMap(GString *encodingName);
@@ -166,6 +175,7 @@ public:
 
   //----- functions to set parameters
 
+  void addDisplayFont(DisplayFontParam *param);
   void setPSFile(char *file);
   GBool setPSPaperSize(char *size);
   void setPSPaperWidth(int width);
@@ -181,9 +191,12 @@ public:
   void setPSASCIIHex(GBool hex);
   void setTextEncoding(char *encodingName);
   GBool setTextEOL(char *s);
+  void setTextKeepTinyChars(GBool keep);
   void setInitialZoom(char *s);
   GBool setT1libControl(char *s);
   GBool setFreeTypeControl(char *s);
+  void setMapNumericCharNames(GBool map);
+  void setPrintCommands(GBool printCommandsA);
   void setErrQuiet(GBool errQuietA);
 
 private:
@@ -209,9 +222,11 @@ private:
   void parseInitialZoom(GList *tokens, GString *fileName, int line);
   void parseFontRastControl(char *cmdName, FontRastControl *val,
 			    GList *tokens, GString *fileName, int line);
-  void parseURLCommand(GList *tokens, GString *fileName, int line);
+  void parseCommand(char *cmdName, GString **val,
+		    GList *tokens, GString *fileName, int line);
   void parseYesNo(char *cmdName, GBool *flag,
 		  GList *tokens, GString *fileName, int line);
+  UnicodeMap *getUnicodeMap2(GString *encodingName);
   GBool setFontRastControl(FontRastControl *val, char *s);
 
   //----- static tables
@@ -259,18 +274,25 @@ private:
 				//   output
   EndOfLineKind textEOL;	// type of EOL marker to use for text
 				//   output
+  GBool textKeepTinyChars;	// keep all characters in text output
   GList *fontDirs;		// list of font dirs [GString]
   GString *initialZoom;		// initial zoom level
   FontRastControl t1libControl;	// t1lib rasterization mode
   FontRastControl		// FreeType rasterization mode
     freetypeControl;
   GString *urlCommand;		// command executed for URL links
+  GString *movieCommand;	// command executed for movie annotations
   GBool mapNumericCharNames;	// map numeric char names (from font subsets)?
+  GBool printCommands;		// print the drawing commands
   GBool errQuiet;		// suppress error messages?
 
   CIDToUnicodeCache *cidToUnicodeCache;
   UnicodeMapCache *unicodeMapCache;
   CMapCache *cMapCache;
+
+#ifdef MULTITHREADED
+  GMutex mutex;
+#endif
 };
 
 #endif

@@ -6,11 +6,12 @@
 //
 //========================================================================
 
-#ifdef __GNUC__
+#include <aconf.h>
+
+#ifdef USE_GCC_PRAGMAS
 #pragma implementation
 #endif
 
-#include <aconf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,6 +66,9 @@ static StdFontMapEntry stdFontMap[] = {
   { "Helvetica,Italic",             "Helvetica-Oblique" },
   { "Helvetica-BoldItalic",         "Helvetica-BoldOblique" },
   { "Helvetica-Italic",             "Helvetica-Oblique" },
+  { "Symbol,Bold",                  "Symbol" },
+  { "Symbol,BoldItalic",            "Symbol" },
+  { "Symbol,Italic",                "Symbol" },
   { "TimesNewRoman",                "Times-Roman" },
   { "TimesNewRoman,Bold",           "Times-Bold" },
   { "TimesNewRoman,BoldItalic",     "Times-BoldItalic" },
@@ -254,6 +258,10 @@ void GfxFont::readFontDescriptor(XRef *xref, Dict *fontDict) {
       // some broken font descriptors set ascent and descent to 0
       if (t != 0) {
 	descent = t;
+      }
+      // some broken font descriptors specify a positive descent
+      if (descent > 0) {
+	descent = -descent;
       }
     }
     obj2.free();
@@ -564,8 +572,9 @@ Gfx8BitFont::Gfx8BitFont(XRef *xref, char *tagA, Ref idA, GString *nameA,
   if (!baseEnc) {
     if (builtinFont) {
       baseEnc = builtinFont->defaultBaseEnc;
+      hasEncoding = gTrue;
     } else if (type == fontTrueType) {
-      baseEnc = macRomanEncoding;
+      baseEnc = winAnsiEncoding;
     } else {
       baseEnc = standardEncoding;
     }
@@ -947,7 +956,7 @@ GfxCIDFont::GfxCIDFont(XRef *xref, char *tagA, Ref idA, GString *nameA,
 
   // CIDToGIDMap (for embedded TrueType fonts)
   if (type == fontCIDType2) {
-    fontDict->lookup("CIDToGIDMap", &obj1);
+    desFontDict->lookup("CIDToGIDMap", &obj1);
     if (obj1.isStream()) {
       cidToGIDLen = 0;
       i = 64;
@@ -1240,21 +1249,31 @@ GString *GfxCIDFont::getCollection() {
 GfxFontDict::GfxFontDict(XRef *xref, Dict *fontDict) {
   int i;
   Object obj1, obj2;
+  Ref r;
 
   numFonts = fontDict->getLength();
   fonts = (GfxFont **)gmalloc(numFonts * sizeof(GfxFont *));
   for (i = 0; i < numFonts; ++i) {
     fontDict->getValNF(i, &obj1);
     obj1.fetch(xref, &obj2);
-    if (obj1.isRef() && obj2.isDict()) {
+    if (obj2.isDict()) {
+      if (obj1.isRef()) {
+	r = obj1.getRef();
+      } else {
+	// no indirect reference for this font, so invent a unique one
+	// (legal generation numbers are five digits, so any 6-digit
+	// number would be safe)
+	r.num = i;
+	r.gen = 999999;
+      }
       fonts[i] = GfxFont::makeFont(xref, fontDict->getKey(i),
-				   obj1.getRef(), obj2.getDict());
+				   r, obj2.getDict());
       if (fonts[i] && !fonts[i]->isOk()) {
 	delete fonts[i];
 	fonts[i] = NULL;
       }
     } else {
-      error(-1, "font resource is not a dictionary reference");
+      error(-1, "font resource is not a dictionary");
       fonts[i] = NULL;
     }
     obj1.free();

@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.35beta", xpdfVersion);
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.35", xpdfVersion);
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "%s\n\n", xpdfCopyright);
     if (!printVersion) {
@@ -289,9 +289,10 @@ int main(int argc, char *argv[]) {
       psFileName->getCString());*/
     
     GString *gsCmd = new GString(GHOSTSCRIPT);
-    GString *tw, *th;
+    GString *tw, *th, *sc;
     gsCmd->append(" -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r");
-    gsCmd->append(GString::fromInt(static_cast<int>(72*scale)));
+    sc = GString::fromInt(static_cast<int>(72*scale));
+    gsCmd->append(sc);
     gsCmd->append(" -sOutputFile=");
     gsCmd->append("\"");
     gsCmd->append(htmlFileName);
@@ -304,13 +305,14 @@ int main(int argc, char *argv[]) {
     gsCmd->append(" -q \"");
     gsCmd->append(psFileName);
     gsCmd->append("\"");
-    printf("running: %s\n", gsCmd->getCString());
+//    printf("running: %s\n", gsCmd->getCString());
     if( !executeCommand(gsCmd->getCString()) && !errQuiet) {
       error(-1, "Failed to launch Ghostscript!\n");
     }
     unlink(psFileName->getCString());
     delete tw;
     delete th;
+    delete sc;
     delete gsCmd;
     delete psFileName;
   }

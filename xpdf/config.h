@@ -14,8 +14,11 @@
 //------------------------------------------------------------------------
 
 // xpdf version
-
-#define xpdfVersion "1.01"
+#define xpdfVersion         "2.01"
+#define xpdfVersionNum      2.01
+#define xpdfMajorVersion    2
+#define xpdfMinorVersion    1
+#define xpdfMajorVersionStr "2"
 
 // supported PDF version
 #define supportedPDFVersionStr "1.4"
@@ -79,7 +82,7 @@
 #define pclose _pclose
 #endif
 
-#if defined(VMS) || defined(VMCMS) || defined(DOS) || defined(OS2) || defined(__EMX__) || defined(WIN32) || defined(__DJGPP__) || defined(__CYGWIN32__) || defined(MACOS)
+#if defined(VMS) || defined(VMCMS) || defined(DOS) || defined(OS2) || defined(__EMX__) || defined(WIN32) || defined(__DJGPP__) || defined(MACOS)
 #define POPEN_READ_MODE "rb"
 #else
 #define POPEN_READ_MODE "r"

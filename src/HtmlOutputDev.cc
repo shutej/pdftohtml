@@ -383,7 +383,7 @@ void HtmlPage::coalesce() {
 	str1->dir == str2->dir // text direction the same
  	) 
     {
-      printf("yes\n");
+//      printf("yes\n");
       n = str1->len + str2->len;
       if ((addSpace = d > 0.1 * space)) {
         ++n;
@@ -467,7 +467,7 @@ void HtmlPage::coalesce() {
       str1->yxNext = str2->yxNext;
       delete str2;
     } else { // keep strings separate
-      printf("no\n"); 
+//      printf("no\n"); 
       if( hfont1->isBold() )
 	str1->htext->append("</b>",4);
       if( hfont1->isItalic() )

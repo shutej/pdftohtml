@@ -50,13 +50,16 @@ CXX_SRC = \
 	$(srcdir)/GfxState.cc \
 	$(srcdir)/GlobalParams.cc \
 	$(srcdir)/ImageOutputDev.cc \
+	$(srcdir)/JBIG2Stream.cc \
 	$(srcdir)/Lexer.cc \
 	$(srcdir)/Link.cc \
 	$(srcdir)/NameToCharCode.cc \
 	$(srcdir)/Object.cc \
+	$(srcdir)/Outline.cc \
 	$(srcdir)/OutputDev.cc \
 	$(srcdir)/PBMOutputDev.cc \
 	$(srcdir)/PDFDoc.cc \
+	$(srcdir)/PDFDocEncoding.cc \
 	$(srcdir)/PSOutputDev.cc \
 	$(srcdir)/Page.cc \
 	$(srcdir)/Parser.cc \
@@ -67,7 +70,7 @@ CXX_SRC = \
 	$(srcdir)/TextOutputDev.cc \
 	$(srcdir)/UnicodeMap.cc \
 	$(srcdir)/XOutputDev.cc \
-        $(srcdir)/Annot.cc \
+	$(srcdir)/Annot.cc \
         $(srcdir)/PSTokenizer.cc \
 	$(srcdir)/XRef.cc
 
@@ -77,7 +80,8 @@ XPDF_OBJS = Array.o BuiltinFont.o BuiltinFontTables.o Catalog.o \
 	CharCodeToUnicode.o CMap.o Decrypt.o Dict.o Error.o \
 	FontEncodingTables.o FontFile.o Function.o Gfx.o \
 	GfxFont.o GfxState.o GlobalParams.o Lexer.o Link.o \
-	NameToCharCode.o Object.o OutputDev.o Page.o Parser.o PDFDoc.o \
+	NameToCharCode.o Object.o Outline.o OutputDev.o Page.o Parser.o \
+	PDFDoc.o PDFDocEncoding.o JBIG2Stream.o \
 	PSOutputDev.o Stream.o UnicodeMap.o XRef.o PSTokenizer.o Annot.o 
 
 $(LIBPREFIX)Xpdf.a: $(XPDF_OBJS)
