@@ -254,232 +254,6 @@ void HtmlString::addChar(GfxState *state, double x, double y,
   ++len;
 }
 
-/*void HtmlString::addChar(GfxState *state, double x, double y,
-                         double dx, double dy,
-                         Guchar c, GBool useASCII7) {
-  char *charName, *sub;
-  int c1;
-  int i, j, n, m;
-
-  // get current index
-  i = str->getLength();
-
-  // append translated character(s) to string
-  sub = NULL;
-  n = 1;
-  if ((charName = state->getFont()->getCharName(c))) {
-    if (useASCII7)
-      c1 = ascii7Encoding.getCharCode(charName);
-    else
-      c1 = isoLatin1Encoding.getCharCode(charName);
-    if (c1 < 0) {
-      m = strlen(charName);
-      if (hexCodes && m == 3 &&
-          (charName[0] == 'B' || charName[0] == 'C' ||
-           charName[0] == 'G') &&
-          isxdigit(charName[1]) && isxdigit(charName[2])) {
-        sscanf(charName+1, "%x", &c1);
-      } else if (!hexCodes && m >= 2 && m <= 3 &&
-                 isdigit(charName[0]) && isdigit(charName[1])) {
-        c1 = atoi(charName);
-        if (c1 >= 256)
-          c1 = -1;
-      } else if (!hexCodes && m >= 3 && m <= 5 && isdigit(charName[1])) {
-        c1 = atoi(charName+1);
-        if (c1 >= 256)
-          c1 = -1;
-      }
-      //~ this is a kludge -- is there a standard internal encoding
-      //~ used by all/most Type 1 fonts?
-      if (c1 == 262)            // hyphen
-        c1 = 45;
-      else if (c1 == 266)       // emdash
-        c1 = 208;
-      if (useASCII7)
-        c1 = ascii7Encoding.getCharCode(isoLatin1Encoding.getCharName(c1));
-    }
-    if (useASCII7) {
-      if (c1 >= 128) {
-        sub = ascii7Subst[c1 - 128];
-        n = strlen(sub);
-      }
-    } else {
-      if (c1 >= 256) {
-        sub = isoLatin1Subst[c1 - 256];
-        n = strlen(sub);
-      }
-    }
-  } else {
-    c1 = -1;
-  }
-  if (sub)
-    text->append(sub);
-  else if (c1 >= 0)
-    text->append((char)c1);
-  else
-    text->append(' ');
-
-  // update position information
-  if (i+n > ((i+15) & ~15))
-    xRight = (double *)grealloc(xRight, ((i+n+15) & ~15) * sizeof(double));
-  if (i == 0)
-    xMin = x;
-  for (j = 0; j < n; ++j)
-    xRight[i+j] = x + ((j+1) * dx) / n;
-  xMax = x + dx;
-}
-
-void HtmlString::addChar16(GfxState *state, double x, double y,
-                           double dx, double dy ) {
-			   // int c, GfxFontCharSet16 charSet) {
-  int c1, t1, t2;
-  int sub[8];
-  char *p;
-  int *q;
-  int i, j, n;
-
-  // get current index
-  i = text->getLength();
-
-  // convert the 16-bit character
-  c1 = 0;
-  sub[0] = 0;
-  switch (charSet) {
-
-  // convert Adobe-Japan1-2 to JIS X 0208-1983
-  case font16AdobeJapan12:
-#if JAPANESE_SUPPORT
-    if (c <= 96) {
-      c1 = 0x8080 + japan12Map[c];
-    } else if (c <= 632) {
-      if (c <= 230)
-        c1 = 0;
-      else if (c <= 324)
-        c1 = 0x8080 + japan12Map[c - 230];
-      else if (c <= 421)
-        c1 = 0x8080 + japan12KanaMap1[c - 325];
-      else if (c <= 500)
-        c1 = 0;
-      else if (c <= 598)
-        c1 = 0x8080 + japan12KanaMap2[c - 501];
-      else
-        c1 = 0;
-    } else if (c <= 1124) {
-      if (c <= 779) {
-        if (c <= 726)
-          c1 = 0xa1a1 + (c - 633);
-        else if (c <= 740)
-          c1 = 0xa2a1 + (c - 727);
-        else if (c <= 748)
-          c1 = 0xa2ba + (c - 741);
-        else if (c <= 755)
-          c1 = 0xa2ca + (c - 749);
-        else if (c <= 770)
-          c1 = 0xa2dc + (c - 756);
-        else if (c <= 778)
-          c1 = 0xa2f2 + (c - 771);
-        else
-          c1 = 0xa2fe;
-      } else if (c <= 841) {
-        if (c <= 789)
-          c1 = 0xa3b0 + (c - 780);
-        else if (c <= 815)
-          c1 = 0xa3c1 + (c - 790);
-        else
-          c1 = 0xa3e1 + (c - 816);
-      } else if (c <= 1010) {
-        if (c <= 924)
-          c1 = 0xa4a1 + (c - 842);
-        else
-          c1 = 0xa5a1 + (c - 925);
-      } else {
-        if (c <= 1034)
-          c1 = 0xa6a1 + (c - 1011);
-        else if (c <= 1058)
-          c1 = 0xa6c1 + (c - 1035);
-        else if (c <= 1091)
-          c1 = 0xa7a1 + (c - 1059);
-        else
-          c1 = 0xa7d1 + (c - 1092);
-      }
-    } else if (c <= 4089) {
-      t1 = (c - 1125) / 94;
-      t2 = (c - 1125) % 94;
-      c1 = 0xb0a1 + (t1 << 8) + t2;
-    } else if (c <= 7477) {
-      t1 = (c - 4090) / 94;
-      t2 = (c - 4090) % 94;
-      c1 = 0xd0a1 + (t1 << 8) + t2;
-    } else if (c <= 7554) {
-      c1 = 0;
-    } else if (c <= 7563) {     // circled Arabic numbers 1..9
-      c1 = 0xa3b1 + (c - 7555);
-    } else if (c <= 7574) {     // circled Arabic numbers 10..20
-      t1 = c - 7564 + 10;
-      sub[0] = 0xa3b0 + (t1 / 10);
-      sub[1] = 0xa3b0 + (t1 % 10);
-      sub[2] = 0;
-      c1 = -1;
-    } else if (c <= 7584) {     // Roman numbers I..X
-      for (p = japan12Roman[c - 7575], q = sub; *p; ++p, ++q) {
-        *q = 0xa380 + *p;
-      }
-      *q = 0;
-      c1 = -1;
-    } else if (c <= 7632) {
-      if (c <= 7600) {
-        c1 = 0;
-      } else if (c <= 7606) {
-        for (p = japan12Abbrev1[c - 7601], q = sub; *p; ++p, ++q) {
-          *q = 0xa380 + *p;
-        }
-        *q = 0;
-        c1 = -1;
-      } else {
-        c1 = 0;
-      }
-    } else {
-      c1 = 0;
-    }
-#endif // JAPANESE_SUPPORT
-    break;
-  }
-
-  // append converted character to string
-  if (c1 == 0) {
-#if 0 //~
-    error(-1, "Unsupported Adobe-Japan1-2 character: %d", c);
-#endif
-    text->append(' ');
-    n = 1;
-  } else if (c1 > 0) {
-    text->append(c1 >> 8);
-    text->append(c1 & 0xff);
-    n = 2;
-  } else {
-    n = 0;
-    for (q = sub; *q; ++q) {
-      text->append(*q >> 8);
-      text->append(*q & 0xff);
-      n += 2;
-    }
-  }
-
-  // update position information
-  if (i+n > ((i+15) & ~15)) {
-    xRight = (double *)grealloc(xRight, ((i+n+15) & ~15) * sizeof(double));
-  }
-  if (i == 0) {
-    xMin = x;
-  }
-  for (j = 0; j < n; ++j) {
-    xRight[i+j] = x + dx;
-  }
-  xMax = x + dx;
-}
-*/
-
-
 
 
 //------------------------------------------------------------------------
@@ -813,7 +587,9 @@ void HtmlPage::dumpComplex(int page){
   tmp=basename(DocName);
   
   fprintf(f,"<html>\n<head>\n<title>Page %d</title>\n\n",page);
-   
+  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n",
+	  globalParams->getTextEncodingName()->getCString());
+
   
   fputs("<style type=\"text/css\">\n<!--\n",f);
     
@@ -948,6 +724,8 @@ void HtmlOutputDev::doFrame(){
   fputs("<html>",f);
   fputs("<head>",f);
   fprintf(f,"<title>%s</title>",fName->getCString());
+  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n",
+	  globalParams->getTextEncodingName()->getCString());
   fputs("<frameset border=3 frameborder=\"yes\" framespacing=2 cols=\" 100,* \"\n>",f);
   fprintf(f,"<frame name=\"links\" src=\"%s_ind.html\" target=\"rechts\">\n",fName->getCString());
   fputs("<frame name=\"rechts\" src=",f); 
@@ -1160,7 +938,20 @@ void HtmlOutputDev::drawChar(GfxState *state, double x, double y,
 void HtmlOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str,
 			      int width, int height, GBool invert,
 			      GBool inlineImg) {
-if (ignore||mode) return;
+
+  int i, j;
+  
+  if (inlineImg) {
+    str->reset();
+    j = height * ((width + 7) / 8);
+    for (i = 0; i < j; ++i)
+      str->getChar();
+    str->close();
+    return;
+  }
+
+  if (ignore||mode) return;
+  
   FILE *f1;
   int c;
   
@@ -1176,8 +967,7 @@ if (ignore||mode) return;
   Gulong pixel;
   int nComps, nVals, nBits;
   double r1, g1, b1;
-  int i, j;
-
+ 
   // get image position and size
   state->transform(0, 0, &xt, &yt);
   state->transformDelta(1, 1, &wt, &ht);
@@ -1243,7 +1033,20 @@ void HtmlOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
 			  int width, int height, GfxImageColorMap *colorMap,
 			  int *maskColors, GBool inlineImg) {
 
-if (ignore||mode) return;
+  int i, j;
+   
+  if (inlineImg) {
+    str->reset();
+    j = height * ((width * colorMap->getNumPixelComps() *
+		   colorMap->getBits() + 7) / 8);
+    for (i = 0; i < j; ++i)
+      str->getChar();
+    str->close();
+    return;
+  }
+
+  if (ignore||mode) return;
+
   FILE *f1;
   ImageStream *imgStr;
   Guchar pixBuf[4];
@@ -1262,8 +1065,7 @@ if (ignore||mode) return;
   Gulong pixel;
   int nComps, nVals, nBits;
   double r1, g1, b1;
-  int i, j;
-
+ 
   // get image position and size
   state->transform(0, 0, &xt, &yt);
   state->transformDelta(1, 1, &wt, &ht);
@@ -1296,8 +1098,8 @@ if (ignore||mode) return;
   }
 
    
-  if( !globalParams->getErrQuiet() )
-    printf("image stream of kind %d\n", str->getKind());
+  /*if( !globalParams->getErrQuiet() )
+    printf("image stream of kind %d\n", str->getKind());*/
   // dump JPEG file
   if (dumpJPEG && str->getKind() == strDCT) {
     GString *fName=new GString(Docname);

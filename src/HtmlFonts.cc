@@ -157,22 +157,15 @@ GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) { //char* s){
   UnicodeMap *uMap;
   char buf[8];
   int n;
-  
+
   // get the output encoding
   if (!(uMap = globalParams->getTextEncoding())) {
     return NULL;
   }
 
   for (int i = 0; i < uLen; ++i) {
-    if ((n = uMap->mapUnicode(u[i], buf, sizeof(buf))) > 0) {
-      tmp->append(buf, n); 
-      //fwrite(buf, 1, n, f);
-    }
-  }
-  /*while (*s!='\0')
-    { 
-      switch (*s)
-	{ 
+    switch (u[i])
+      { 
 	case '"': tmp->append("&quot;");  break;
 	case '&': tmp->append("&amp;");  break;
 	case '<': tmp->append("&lt;");  break;
@@ -180,11 +173,13 @@ GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) { //char* s){
 	default:  
 	  {
 	    // convert unicode to string
-	    tmp->append(*s);
+	    if ((n = uMap->mapUnicode(u[i], buf, sizeof(buf))) > 0) {
+	      tmp->append(buf, n); 
 	  }
-	}
-      s++;
-      }*/
+      }
+    }
+  }
+
   return tmp;
 }
 

@@ -45,6 +45,8 @@ GBool stout=gFalse;
 GBool xml=gFalse;
 GBool errQuiet=gFalse;
 
+static char textEncName[128] = "";
+
 static ArgDesc argDesc[] = {
   {"-f",      argInt,      &firstPage,     0,
    "first page to convert"},
@@ -74,6 +76,8 @@ static ArgDesc argDesc[] = {
    "zoom the pdf document (default 1.5)"},
   {"-xml"  ,argFlag,    &xml,         0,
    "output for XML post-processing"},
+  {"-enc",    argString,   textEncName,    sizeof(textEncName),
+   "output text encoding name"},
   {NULL}
 };
 
@@ -105,6 +109,10 @@ int main(int argc, char *argv[]) {
   if (errQuiet) {
     globalParams->setErrQuiet(errQuiet);
     printCommands = gFalse; // I'm not 100% what is the differecne between them
+  }
+
+  if (textEncName[0]) {
+    globalParams->setTextEncoding(textEncName);
   }
 
 

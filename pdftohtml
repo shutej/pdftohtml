@@ -42,6 +42,8 @@ while getopts f:l:d:o:s:qcFihx OPT; do
     DIR=$OPTARG;;
   s)
     SCALE="-zoom $OPTARG";;
+  e)
+    ENC="-enc $OPTARG";;
   o)
     if [ $OPTARG = "-" ]; then
       STDOUT=-stdout
@@ -83,7 +85,7 @@ if [ ! -x $DIR ]; then
   mkdir -p $DIR
 fi
 
-$PDFTOHTMLBIN_DIR/pdftohtml.bin $FRAMES $STDOUT $FIRST $LAST $EXT $QUIET $CSS $IGNOREIMAGES $SCALE $XML $PDFFILE $DIR/$TARGET
+$PDFTOHTMLBIN_DIR/pdftohtml.bin $FRAMES $STDOUT $FIRST $LAST $EXT $QUIET $CSS $IGNOREIMAGES $SCALE $ENC $XML $PDFFILE $DIR/$TARGET
 
 
 image=$DIR/image.log
