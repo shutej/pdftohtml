@@ -9,6 +9,3 @@ These pages do not have to be processed by ghostscript at all.
 
 Plain (non-complex) output might not preserve the order of text.
 
-Page title is not set to PDF document's title. 
-
-Still memory leaks? Rebuild with DEBUG_MEM and check for real

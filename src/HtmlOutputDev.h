@@ -18,7 +18,6 @@
 #include "gtypes.h"
 #include "GfxFont.h"
 #include "OutputDev.h"
-//#include "GVector.h" 
 #include "HtmlLinks.h"
 #include "HtmlFonts.h"
 #include "Link.h"
@@ -32,6 +31,8 @@
 #endif
 
 #define xoutRound(x) ((int)(x + 0.5))
+
+#define GENERATOR "<META NAME=\"GENERATOR\" CONTENT=\"pdftohtml 0.33\">"
 
 class GfxState;
 class GString;
@@ -165,7 +166,7 @@ public:
   // 8-bit ISO Latin-1.  <useASCII7> should also be set for Japanese
   // (EUC-JP) text.  If <rawOrder> is true, the text is kept in content
   // stream order.
-  HtmlOutputDev(char *fileName, GBool rawOrder);
+  HtmlOutputDev(char *fileName, GString *title, GBool rawOrder);
 
   // Destructor.
   virtual ~HtmlOutputDev();
@@ -233,10 +234,8 @@ private:
   int maxPageHeight;
   static int imgNum;
   GString *Docname;
+  GString *docTitle;
   friend class HtmlPage;
 };
 
 #endif
-
-
-

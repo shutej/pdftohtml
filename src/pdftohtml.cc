@@ -47,6 +47,8 @@ static char ownerPassword[33] = "";
 static char userPassword[33] = "";
 static GBool printVersion = gFalse;
 
+static GString* getInfoString(Dict *infoDict, char *key);
+
 static char textEncName[128] = "";
 
 static ArgDesc argDesc[] = {
@@ -93,7 +95,8 @@ static ArgDesc argDesc[] = {
 
 int main(int argc, char *argv[]) {
   PDFDoc *doc;
-  GString *fileName;
+  GString *fileName = NULL;
+  GString *docTitle = NULL;
   GString *htmlFileName = NULL;
   GString *psFileName = NULL;
   HtmlOutputDev *htmlOut = NULL;
@@ -101,12 +104,15 @@ int main(int argc, char *argv[]) {
   GBool ok;
   char *p;
   GString *ownerPW, *userPW;
+  Object info;
 
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml.bin version %s\n", "0.33");
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/\n", "0.33");
     fprintf(stderr, "%s\n", "Copyright 1999-2002 Gueorgui Ovtcharov and Rainer Dorsch");
+    fprintf(stderr, "based on Xpdf version %s\n", xpdfVersion);
+    fprintf(stderr, "%s\n\n", xpdfCopyright);
     if (!printVersion) {
       printUsage("pdftohtml", "<PDF-file> [<html-file> <xml-file>]", argDesc);
     }
@@ -128,7 +134,6 @@ int main(int argc, char *argv[]) {
   if (textEncName[0]) {
     globalParams->setTextEncoding(textEncName);
   }
-
 
   // open PDF file
   if (ownerPassword[0]) {
@@ -209,11 +214,16 @@ int main(int argc, char *argv[]) {
   if (lastPage < 1 || lastPage > doc->getNumPages())
     lastPage = doc->getNumPages();
 
+  doc->getDocInfo(&info);
+  if (info.isDict()) {
+    docTitle = getInfoString(info.getDict(), "Title");
+    if( !docTitle ) docTitle = new GString(htmlFileName);
+  }
+
+
   // write text file
-  /*#if JAPANESE_SUPPORT
-  //useASCII7 |= useEUCJP;
-#endif*/
-  htmlOut = new HtmlOutputDev(htmlFileName->getCString(), rawOrder);
+  htmlOut = new HtmlOutputDev(htmlFileName->getCString(), docTitle, rawOrder);
+
   if (htmlOut->isOk())  
     doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
   
@@ -232,26 +242,32 @@ int main(int argc, char *argv[]) {
     doc->displayPages(psOut, firstPage, lastPage, 72, 0, gFalse);
     delete psOut;
 
-    char buf[256];
-    sprintf(buf, "%s -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -sOutputFile=%s%%03d.png -g%dx%d -q %s", GHOSTSCRIPT, htmlFileName->getCString(), w, h,
-	    psFileName->getCString());
-    /*GString *gsCmd = new GString("gs -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -q -sOutputFile=");
+    /*sprintf(buf, "%s -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -sOutputFile=%s%%03d.png -g%dx%d -q %s", GHOSTSCRIPT, htmlFileName->getCString(), w, h,
+      psFileName->getCString());*/
+    
+    GString *gsCmd = new GString(GHOSTSCRIPT);
+    GString *tw, *th;
+    gsCmd->append(" -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -sOutputFile=");
     gsCmd->append(htmlFileName);
     gsCmd->append("%03d.png -g");
-    gsCmd->append(htmlOut->getPageWidth());
+    tw = GString::IntToStr(w);
+    gsCmd->append(tw);
     gsCmd->append("x");
-    gsCmd->append(htmlOut->getPageHeight());
-    gsCmd->append(" ");
-    gsCmd->append(psFileName);*/
-    if( !executeCommand(buf) && !errQuiet) {
+    th = GString::IntToStr(h);
+    gsCmd->append(th);
+    gsCmd->append(" -q ");
+    gsCmd->append(psFileName);
+    if( !executeCommand(gsCmd->getCString()) && !errQuiet) {
       error(-1, "Failed to launch Ghostscript!\n");
     }
-    //delete gsCmd;
+    delete tw;
+    delete th;
+    delete gsCmd;
     delete psFileName;
   }
   
   delete htmlOut;
-  
+
   // clean up
   delete htmlFileName;
  err2:
@@ -264,4 +280,15 @@ int main(int argc, char *argv[]) {
   gMemReport(stderr);
 
   return 0;
+}
+
+static GString* getInfoString(Dict *infoDict, char *key) {
+  Object obj;
+  GString *s1 = NULL;
+
+  if (infoDict->lookup(key, &obj)->isString()) {
+    s1 = new GString(obj.getString());
+  }
+  obj.free();
+  return s1;
 }

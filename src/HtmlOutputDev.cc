@@ -98,7 +98,7 @@ HtmlString::HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts) {
 
 HtmlString::~HtmlString() {
   delete text;
-  delete htext ;
+  delete htext;
   gfree(xRight);
 }
 
@@ -395,7 +395,7 @@ void HtmlPage::dumpComplex(int page){
   
   fprintf(f,"<html>\n<head>\n<title>Page %d</title>\n\n",page);
   fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
-  
+  fprintf(f, "%s\n", GENERATOR);
   fputs("<style type=\"text/css\">\n<!--\n",f);
     
   for(int i=0;i!=fonts->size();i++) {
@@ -510,9 +510,10 @@ void HtmlOutputDev::doFrame(){
   fName=basename(Docname);
   fputs("<html>",f);
   fputs("<head>",f);
-  fprintf(f,"<title>%s</title>",fName->getCString());
-  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n",
-	  globalParams->getTextEncodingName()->getCString());
+  fprintf(f,"<title>%s</title>",docTitle->getCString());//fName->getCString());
+  fprintf(f, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
+  fprintf(f, "%s\n", GENERATOR);
+  fprintf(f, "</head>\n");
   fputs("<frameset border=3 frameborder=\"yes\" framespacing=2 cols=\" 100,* \"\n>",f);
   fprintf(f,"<frame name=\"links\" src=\"%s_ind.html\" target=\"rechts\">\n",fName->getCString());
   fputs("<frame name=\"rechts\" src=",f); 
@@ -527,8 +528,10 @@ void HtmlOutputDev::doFrame(){
 
 }
 
-HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
+HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title, 
+			     GBool rawOrder) {
   f=NULL;
+  docTitle = new GString(title);
   pages = NULL;
   dumpJPEG=gTrue;
   //write = gTrue;
@@ -546,11 +549,11 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
   pages->setDocName(fileName);
   Docname=new GString (fileName);
 
-  GString *tmp=basename(Docname);
+  /*GString *tmp=basename(Docname);
   if (tmp->getLength()==0) {
     printf("Error : illegal output file");
     exit(1);
-  }
+    }*/
 
   //Complex and simple doc with frames
   if(!xml&&!noframes){
@@ -598,12 +601,15 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
       fputs("<!DOCTYPE pdf2xml SYSTEM \"pdf2xml.dtd\">\n\n", page);
       fputs("<pdf2xml>\n",page);
     } else {
-      fprintf(page,"<html>\n<head>\n<title>%s</title>\n</head>\n",tmp->getCString());
-      fputs("<body bgcolor=\"#A0A0A0>\" vlink=\"blue\" link=\"blue\">\n",page);
+      fprintf(page,"<html>\n<head>\n<title>%s</title>\n",docTitle->getCString());//tmp->getCString());
+      fprintf(page, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
+      fprintf(page, "%s\n", GENERATOR);
+      fprintf(page,"</head>\n");
+      fprintf(page,"<body bgcolor=\"#A0A0A0>\" vlink=\"blue\" link=\"blue\">\n");
     }
   }    
   
-  delete tmp;
+  //delete tmp;
 }
 
 HtmlOutputDev::~HtmlOutputDev() {
@@ -618,6 +624,8 @@ HtmlOutputDev::~HtmlOutputDev() {
     HtmlFont::clear(); 
     
     delete Docname;
+    delete docTitle;
+
     if (f){
       fputs("</body>\n</html>\n",f);  
       fclose(f);
