@@ -79,3 +79,5 @@ pdftohtml 0.36 (beta)
 -updated Xpdf to 2.02 (security fix)
 -a couple of fixes and tweaks for better output
 -ported duplicate lines elimination from pdftotext (does not affect complex mode)
+-fixed bug which caused bold to spread from one sentence to the entire document
+-support for document outlines (patch by Nicolas Pitre)

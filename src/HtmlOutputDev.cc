@@ -692,11 +692,13 @@ void HtmlPage::dumpComplex(FILE *file, int page){
 
 void HtmlPage::dump(FILE *f, int pageNum) 
 {
-  if (complexMode){
+  if (complexMode)
+  {
     if (xml) dumpAsXML(f, pageNum);
     if (!xml) dumpComplex(f, pageNum);  
   }
-  else{
+  else
+  {
     fprintf(f,"<A name=%d></a>",pageNum);
     GString* fName=basename(DocName); 
     for (int i=1;i<HtmlOutputDev::imgNum;i++)
@@ -707,12 +709,13 @@ void HtmlPage::dump(FILE *f, int pageNum)
     GString* str;
     for(HtmlString *tmp=yxStrings;tmp;tmp=tmp->yxNext){
       if (tmp->htext){
-	str=new GString(tmp->htext); 
-	fputs(str->getCString(),f);
-	delete str;      
-	fputs("<br>\n",f);  
+		str=new GString(tmp->htext); 
+		fputs(str->getCString(),f);
+		delete str;      
+		fputs("<br>\n",f);  
       }
-    }   
+    }
+	fputs("<hr>\n",f);  
   }
 }
 
@@ -808,7 +811,7 @@ void HtmlOutputDev::doFrame(int firstPage){
   char* htmlEncoding;
   fName->append(".html");
 
-  if (!(f = fopen(fName->getCString(), "w"))){
+  if (!(fContentsFrame = fopen(fName->getCString(), "w"))){
     delete fName;
     error(-1, "Couldn't open html file '%s'", fName->getCString());
     return;
@@ -817,43 +820,43 @@ void HtmlOutputDev::doFrame(int firstPage){
   delete fName;
     
   fName=basename(Docname);
-  fputs(DOCTYPE_FRAMES, f);
-  fputs("\n<HTML>",f);
-  fputs("\n<HEAD>",f);
-  fprintf(f,"\n<TITLE>%s</TITLE>",docTitle->getCString());
+  fputs(DOCTYPE_FRAMES, fContentsFrame);
+  fputs("\n<HTML>",fContentsFrame);
+  fputs("\n<HEAD>",fContentsFrame);
+  fprintf(fContentsFrame,"\n<TITLE>%s</TITLE>",docTitle->getCString());
   htmlEncoding = mapEncodingToHtml(globalParams->getTextEncodingName());
-  fprintf(f, "\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding);
-  dumpMetaVars(f);
-  fprintf(f, "</HEAD>\n");
-  fputs("<FRAMESET cols=\"100,*\">\n",f);
-  fprintf(f,"<FRAME name=\"links\" src=\"%s_ind.html\">\n",fName->getCString());
-  fputs("<FRAME name=\"contents\" src=",f); 
+  fprintf(fContentsFrame, "\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding);
+  dumpMetaVars(fContentsFrame);
+  fprintf(fContentsFrame, "</HEAD>\n");
+  fputs("<FRAMESET cols=\"100,*\">\n",fContentsFrame);
+  fprintf(fContentsFrame,"<FRAME name=\"links\" src=\"%s_ind.html\">\n",fName->getCString());
+  fputs("<FRAME name=\"contents\" src=",fContentsFrame); 
   if (complexMode) 
-      fprintf(f,"\"%s-%d.html\"",fName->getCString(), firstPage);
+      fprintf(fContentsFrame,"\"%s-%d.html\"",fName->getCString(), firstPage);
   else
-      fprintf(f,"\"%ss.html\"",fName->getCString());
+      fprintf(fContentsFrame,"\"%ss.html\"",fName->getCString());
   
-  fputs(">\n</FRAMESET>\n</HTML>\n",f);
+  fputs(">\n</FRAMESET>\n</HTML>\n",fContentsFrame);
  
   delete fName;
-  fclose(f);  
-
+  fclose(fContentsFrame);  
 }
 
 HtmlOutputDev::HtmlOutputDev(char *fileName, char *title, 
 	char *author, char *keywords, char *subject, char *date,
 	char *extension,
-	GBool rawOrder, int firstPage) 
+	GBool rawOrder, int firstPage, GBool outline) 
 {
   char *htmlEncoding;
   
-  f=NULL;
+  fContentsFrame = NULL;
   docTitle = new GString(title);
   pages = NULL;
   dumpJPEG=gTrue;
   //write = gTrue;
   this->rawOrder = rawOrder;
-  ok = gTrue;
+  this->doOutline = outline;
+  ok = gFalse;
   imgNum=1;
   //this->firstPage = firstPage;
   //pageNum=firstPage;
@@ -882,23 +885,33 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
 
      doFrame(firstPage);
    
-     if (!(f=fopen(left->getCString(), "w"))){
+     if (!(fContentsFrame = fopen(left->getCString(), "w")))
+	 {
         error(-1, "Couldn't open html file '%s'", left->getCString());
-	delete left;
+		delete left;
         return;
      }
      delete left;
-     fputs(DOCTYPE, f);
-     fputs("<HTML>\n<HEAD>\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n",f);
+     fputs(DOCTYPE, fContentsFrame);
+     fputs("<HTML>\n<HEAD>\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n",fContentsFrame);
      
-     if(!complexMode){
+  	if (doOutline)
+	{
+		GString *str = basename(Docname);
+		fprintf(fContentsFrame, "<A href=\"%s%s\" target=\"contents\">Outline</a><br>", str->getCString(), complexMode ? "-outline.html" : "s.html#outline");
+		delete str;
+	}
+  	
+	if (!complexMode)
+	{	/* not in complex mode */
+		
        GString* right=new GString(fileName);
        right->append("s.html");
 
        if (!(page=fopen(right->getCString(),"w"))){
         error(-1, "Couldn't open html file '%s'", right->getCString());
         delete right;
-	return;
+		return;
        }
        delete right;
        fputs(DOCTYPE, page);
@@ -938,7 +951,8 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
       fprintf(page,"</HEAD>\n");
       fprintf(page,"<BODY bgcolor=\"#A0A0A0\" vlink=\"blue\" link=\"blue\">\n");
     }
-  }    
+  }
+  ok = gTrue; 
 }
 
 HtmlOutputDev::~HtmlOutputDev() {
@@ -957,9 +971,9 @@ HtmlOutputDev::~HtmlOutputDev() {
 
     deleteGList(glMetaVars, HtmlMetaVar);
 
-    if (f){
-      fputs("</BODY>\n</HTML>\n",f);  
-      fclose(f);
+    if (fContentsFrame){
+      fputs("</BODY>\n</HTML>\n",fContentsFrame);  
+      fclose(fContentsFrame);
     }
     if (xml) {
       fputs("</pdf2xml>\n",page);  
@@ -997,13 +1011,15 @@ void HtmlOutputDev::startPage(int pageNum, GfxState *state) {
   this->pageNum = pageNum;
   GString *str=basename(Docname);
   pages->clear(); 
-  if(!noframes){
-    if (f){
+  if(!noframes)
+  {
+    if (fContentsFrame)
+	{
       if (complexMode)
-	fprintf(f,"<A href=\"%s-%d.html\"",str->getCString(),pageNum);
+		fprintf(fContentsFrame,"<A href=\"%s-%d.html\"",str->getCString(),pageNum);
       else 
-	fprintf(f,"<A href=\"%ss.html#%d\"",str->getCString(),pageNum);
-      fprintf(f," target=\"contents\" >Page %d</a><br>\n",pageNum);
+		fprintf(fContentsFrame,"<A href=\"%ss.html#%d\"",str->getCString(),pageNum);
+      fprintf(fContentsFrame," target=\"contents\" >Page %d</a><br>\n",pageNum);
     }
   }
 
@@ -1025,7 +1041,7 @@ void HtmlOutputDev::endPage() {
   maxPageWidth = pages->pageWidth;
   maxPageHeight = pages->pageHeight;
   
-  //if(!noframes&&!xml) fputs("<br>\n", f);
+  //if(!noframes&&!xml) fputs("<br>\n", fContentsFrame);
   if(!stout && !globalParams->getErrQuiet()) printf("Page-%d\n",(pageNum));
 }
 
@@ -1389,4 +1405,144 @@ void HtmlOutputDev::dumpMetaVars(FILE *file)
      fprintf(file, "%s\n", var->getCString());
      delete var;
   }
+}
+
+GBool HtmlOutputDev::dumpDocOutline(Catalog* catalog)
+{ 
+	FILE * output;
+	GBool bClose = gFalse;
+
+	if (!ok || xml)
+    	return gFalse;
+  
+	Object *outlines = catalog->getOutline();
+  	if (!outlines->isDict())
+    	return gFalse;
+  
+	if (!complexMode && !xml)
+  	{
+		output = page;
+  	}
+  	else if (complexMode && !xml)
+	{
+		if (noframes)
+		{
+			output = page; 
+			fputs("<hr>\n", output);
+		}
+		else
+		{
+			GString *str = basename(Docname);
+			str->append("-outline.html");
+			output = fopen(str->getCString(), "w");
+			if (output == NULL)
+				return gFalse;
+			delete str;
+			bClose = gTrue;
+     		fputs("<HTML>\n<HEAD>\n<TITLE>Document Outline</TITLE>\n</HEAD>\n<BODY>\n", output);
+		}
+	}
+ 
+  	GBool done = newOutlineLevel(output, outlines, catalog);
+  	if (done && !complexMode)
+    	fputs("<hr>\n", output);
+	
+	if (bClose)
+	{
+		fputs("</BODY>\n</HTML>\n", output);
+		fclose(output);
+	}
+  	return done;
+}
+
+GBool HtmlOutputDev::newOutlineLevel(FILE *output, Object *node, Catalog* catalog, int level)
+{
+  Object curr, next;
+  GBool atLeastOne = gFalse;
+  
+  if (node->dictLookup("First", &curr)->isDict()) {
+    if (level == 1)
+	{
+		fputs("<A name=\"outline\"></a>", output);
+		fputs("<h1>Document Outline</h1>\n", output);
+	}
+    fputs("<ul>",output);
+    do {
+      // get title, give up if not found
+      Object title;
+      if (curr.dictLookup("Title", &title)->isNull()) {
+		title.free();
+		break;
+      }
+      GString *titleStr = new GString(title.getString());
+      title.free();
+
+      // get corresponding link
+      // Note: some code duplicated from HtmlOutputDev::getLinkDest().
+      GString *linkName = NULL;;
+      Object dest;
+      if (!curr.dictLookup("Dest", &dest)->isNull()) {
+		LinkGoTo *link = new LinkGoTo(&dest);
+		LinkDest *linkdest=NULL;
+		if (link->getDest()==NULL) 
+	  		linkdest=catalog->findDest(link->getNamedDest());
+		else 
+	  		linkdest=link->getDest()->copy();
+		delete link;
+		if (linkdest) { 
+	  		int page;
+	  		if (linkdest->isPageRef()) {
+	    		Ref pageref=linkdest->getPageRef();
+	    		page=catalog->findPage(pageref.num,pageref.gen);
+	  		} else {
+	    		page=linkdest->getPageNum();
+	  		}
+	  		delete linkdest;
+
+			/* 			complex 	simple
+			frames		file-4.html	files.html#4
+			noframes	file.html#4	file.html#4
+	   		*/
+	  		linkName=basename(Docname);
+	  		GString *str=GString::fromInt(page);
+	  		if (noframes) {
+	    		linkName->append(".html#");
+				linkName->append(str);
+	  		} else {
+    			if( complexMode ) {
+	   		   		linkName->append("-");
+	      			linkName->append(str);
+	      			linkName->append(".html");
+	    		} else {
+	      			linkName->append("s.html#");
+	      			linkName->append(str);
+	    		}
+	  		}
+			delete str;
+		}
+      }
+      dest.free();
+
+      fputs("<li>",output);
+      if (linkName)
+		fprintf(output,"<A href=\"%s\">", linkName->getCString());
+      fputs(titleStr->getCString(),output);
+      if (linkName) {
+		fputs("</A>",output);
+		delete linkName;
+      }
+      fputs("\n",output);
+      delete titleStr;
+      atLeastOne = gTrue;
+
+      newOutlineLevel(output, &curr, catalog, level+1);
+      curr.dictLookup("Next", &next);
+      curr.free();
+      curr = next;
+    } while(curr.isDict());
+    fputs("</ul>",output);
+  }
+  curr.free();
+
+  return atLeastOne;
 }

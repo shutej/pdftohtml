@@ -263,7 +263,9 @@ int main(int argc, char *argv[]) {
           subject ? subject->getCString() : NULL, 
 	  date ? date->getCString() : NULL,
 	  extension,
-	  rawOrder, firstPage);
+	  rawOrder, 
+	  firstPage,
+	  doc->getCatalog()->getOutline()->isDict());
   delete docTitle;
   if( author )
   {   
@@ -282,8 +284,14 @@ int main(int argc, char *argv[]) {
       delete date;
   }
 
-  if (htmlOut->isOk())  
-    doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
+  if (htmlOut->isOk())
+  {
+	doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
+  	if (!xml)
+	{
+		htmlOut->dumpDocOutline(doc->getCatalog());
+	}
+  }
   
   if( complexMode && !xml && !ignore ) {
     int h=xoutRound(htmlOut->getPageHeight()/scale);

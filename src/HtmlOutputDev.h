@@ -199,7 +199,8 @@ public:
 	  char *date,
 	  char *extension,
 	  GBool rawOrder,
-	  int firstPage = 1);
+	  int firstPage = 1,
+	  GBool outline = 0);
 
   // Destructor.
   virtual ~HtmlOutputDev();
@@ -257,6 +258,8 @@ public:
   int getPageWidth() { return maxPageWidth; }
   int getPageHeight() { return maxPageHeight; }
 
+  GBool dumpDocOutline(Catalog* catalog);
+
 private:
   // convert encoding into a HTML standard, or encoding->getCString if not
   // recognized
@@ -264,13 +267,16 @@ private:
   GString* getLinkDest(Link *link,Catalog *catalog);
   void dumpMetaVars(FILE *);
   void doFrame(int firstPage);
-  FILE *f;			// text file
+  GBool newOutlineLevel(FILE *output, Object *node, Catalog* catalog, int level = 1);
+
+  FILE *fContentsFrame;
   FILE *page;                   // html file
   //FILE *tin;                    // image log file
   //GBool write;
   GBool needClose;		// need to close the file?
   HtmlPage *pages;		// text for the current page
   GBool rawOrder;		// keep text in content stream order
+  GBool doOutline;		// output document outline
   GBool ok;			// set up ok?
   GBool dumpJPEG;
   int pageNum;

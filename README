@@ -3,6 +3,7 @@ pdftohtml
 
 Pdftohtml was developed by Gueorgui Ovtcharov and Rainer Dorsch. It is
 based and benefits a lot from Derek Noonburg's xpdf package.
+Currently pdftohtml is maintained by Mikhail Kruk (meshko@cs.brandeis.edu)
 
 version 0.35
 January 12th, 2003
@@ -54,6 +55,10 @@ Running pdftohtml
 To run pdftohtml type : 
     
     pdftohtml file.pdf
+
+To produce complex output (most people will want that, probably) :
+	
+	pdftohtml -c file.pdf
 
 
 Distribution
