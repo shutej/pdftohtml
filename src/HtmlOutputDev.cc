@@ -303,6 +303,9 @@ void HtmlPage::coalesce() {
   printf("\n------------------------------------------------------------\n\n");
 #endif
   str1 = yxStrings;
+
+  if( !str1 ) return;
+
   hfont1 = getFont(str1);
   if( hfont1.isBold() )
     str1->htext->insert(0,"<b>",3);

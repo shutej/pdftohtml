@@ -1,11 +1,17 @@
 Known bugs in pdftohtml 0.33:
 
-Complex output will not work correctly when there are pages of different size
+* Complex output will not work correctly when there are pages of different size
 (large background image will be screwed up)
 I think that in order to fix this I will have to keep some info about each page
 and then run ghostscript multiple times for the page ranges with different page
 sizes. On the positive size this can be used to also keep track of pages with text only.
 These pages do not have to be processed by ghostscript at all.
 
-Plain (non-complex) output might not preserve the order of text.
+* Related to previous: we need to keep track of rotation of each page and
+specify rotation to ghostscript when needed.
 
+* Plain (non-complex) output might not preserve the order of text.
+
+* For demo1.pdf first font is there twice. This is because we keep separete 
+fonts for <b> and <i> even though they are otherwise identical. Not really 
+a problem, just ugly.
