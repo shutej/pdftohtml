@@ -1,0 +1,85 @@
+pdftohtml
+=========
+
+Pdftohtml was developed by Gueorgui Ovtcharov and Rainer Dorsch. It is
+based and benefits a lot from Derek Noonburg's xpdf package.
+
+version 0.32
+February 22th, 2002
+
+Email: pdftohtml-general@lists.sourceforge.net
+WWW:   http://sourceforge.net/projects/pdftohtml
+
+The xpdf software and documentation are
+copyright 1996-2002 Derek B. Noonburg.
+
+The PDF data structures, operators, and specification are
+copyright 1995 Adobe Systems Inc.
+
+
+What is pdftohtml.bin?
+----------------------
+
+pdftohtml.bin converts files from the Portable Document Format (PDF) files
+into the HTML file format.
+
+
+What is pdftohtml?
+-----------------
+
+Pdftohtml is a shell script that executes pdftohtml.bin and converts all
+images.
+
+
+How to use pdftohtml?
+---------------------
+
+If HTML-file is not specified pdftohtml.bin converts file.pdf to file.html
+and extracts all images.  If the -c option is not specified, only JPEG
+files are saved. If the -c option is specified, one PNG image is generated
+for each page.
+
+
+How to compile pdftohtml.bin ?
+------------------------------
+
+To compile pdftohtml.bin, type : 
+   
+    make
+
+
+This version of Pdftohtml is tested on Linux, FreeBSD and Windows
+
+
+
+Running pdftohtml
+-----------------
+
+To run pdftohtml type : 
+    
+    pdftohtml file.pdf
+
+
+Distribution
+------------
+
+Pdftohtml is licensed under the GNU General Public License (GPL), version
+2. See COPYING. 
+
+
+Getting pdftohtml
+----------------- 
+
+The latest version of pdftohtml is available from:
+
+  http://sourceforge.net/projects/pdftohtml/
+
+Mail Aliases:
+-------------
+
+The new mailing list is here:
+pdftohtml-general@lists.sourceforge.net
+
+You can post to it by just e-mailing to the address above.
+To subscribe to the mailing list please visit:
+http://lists.sourceforge.net/lists/listinfo/pdftohtml-general

@@ -1,0 +1,36 @@
+pdftohtml 0.10
+==============
+First public release
+
+pdftohtml 0.20
+==============
+-added complex document extraction 
+-added image extraction
+-added pdftohtml script
+
+pdftohtml 0.21
+==============
+-added support for colored fonts
+-bugfixes
+
+pdftohtml 0.22
+==============
+- fixed Digital C++ compilation bug
+- fixed -e bug
+- other bugfixes
+
+pdftohtml 0.30 (test version)
+==============
+-Added pdf-vector drawings extraction
+-HTML output compatible with MI 4.0 
+  (using the patches by Claus Hulstrom and Zoltan Hawryluk)
+-output for XML post-processing (patch by Anjo Anjewierden)
+-zoom option
+-other bugfixes
+
+pdftohtml 0.31 (test version)
+==============
+-bugfixes
+
+pdftohtml 0.32 (*test* version)
+-updated to use xpdf 1.0

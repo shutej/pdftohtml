@@ -1,0 +1,80 @@
+#ifndef _HTML_FONTS_H
+#define _HTML_FONTS_H
+#include "GVector.h"
+#include "GString.h"
+#include "GfxState.h"
+#include "CharTypes.h"
+
+
+class HtmlFontColor{
+ private:
+   unsigned int r;
+   unsigned int g;
+   unsigned int b;
+   GBool Ok(unsigned int xcol){ return ((xcol<=255)&&(xcol>=0));}
+   GString *convtoX(unsigned  int xcol) const;
+ public:
+   HtmlFontColor():r(0),g(0),b(0){}
+   HtmlFontColor(GfxRGB rgb);
+   HtmlFontColor(const HtmlFontColor& x){r=x.r;g=x.g;b=x.b;}
+   HtmlFontColor& operator=(const HtmlFontColor &x){
+     r=x.r;g=x.g;b=x.b;
+     return *this;
+   }
+   ~HtmlFontColor(){};
+   GString* toString() const;
+   GBool isEqual(const HtmlFontColor& col) const{
+     return ((r==col.r)&&(g==col.g)&&(b==col.b));
+   }
+} ;  
+
+
+class HtmlFont{
+ private:
+   unsigned int size;
+   GBool italic;
+   GBool bold;
+   int pos;
+   static GString *DefaultFont;
+   GString *FontName;
+   HtmlFontColor color;
+   static GString* HtmlFilter(Unicode* u, int uLen); //char* s);
+public:  
+   HtmlFont(){FontName=NULL;};
+   HtmlFont(GString* fontname,int _size,GfxRGB rgb);
+   HtmlFont(const HtmlFont& x);
+   HtmlFont& operator=(const HtmlFont& x);
+   HtmlFontColor getColor() const {return color;}
+   ~HtmlFont();
+   static void clear();
+   GString* getFullName();
+   GBool isItalic() const {return italic;}
+   GBool isBold() const {return bold;}
+   unsigned int getSize() const {return size;}
+   GString* getFontName();
+   static GString* getDefaultFont();
+   static void setDefaultFont(GString* defaultFont);
+   GBool isEqual(const HtmlFont& x) const;
+   static GString* simple(GString* fontname, Unicode *content, int uLen);
+   static int leak;
+};
+
+class HtmlFontAccu{
+private:
+  GVector<HtmlFont> *accu;
+  
+public:
+  HtmlFontAccu();
+  ~HtmlFontAccu();
+  int AddFont(const HtmlFont& font);
+  HtmlFont Get(int i){
+    GVector<HtmlFont>::iterator g=accu->begin();
+    g+=i;  
+    return *g;
+  } 
+  GString* getCSStyle (int i,GString* content);
+  GString* CSStyle(int i);
+  int size() const {return accu->size();}
+  
+};  
+#endif
