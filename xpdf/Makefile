@@ -9,17 +9,16 @@
 
 SHELL = /bin/sh
 
-prefix = /usr/local
 srcdir = .
 
 GOOSRCDIR = $(srcdir)/../goo
 GOOLIBDIR = ../goo
 
-CXXFLAGS = -g -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) 
+CXXFLAGS += -g -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) 
 #-DDEBUG_MEM
 
-CC = gcc
-CXX = c++
+CC ?= cc
+CXX ?= c++
 AR = ar rc
 RANLIB = ranlib
 

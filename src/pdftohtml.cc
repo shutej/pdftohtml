@@ -43,7 +43,9 @@ GBool noframes=gFalse;
 GBool stout=gFalse;
 GBool xml=gFalse;
 GBool errQuiet=gFalse;
+
 GBool showHidden = gFalse;
+GBool noMerge = gFalse;
 static char ownerPassword[33] = "";
 static char userPassword[33] = "";
 static GBool printVersion = gFalse;
@@ -81,6 +83,8 @@ static ArgDesc argDesc[] = {
    "output for XML post-processing"},
   {"-hidden", argFlag,   &showHidden,   0,
    "output hidden text"},
+  {"-nomerge", argFlag, &noMerge, 0,
+   "do not merge paragraphs"},   
   {"-enc",    argString,   textEncName,    sizeof(textEncName),
    "output text encoding name"},
   {"-v",      argFlag,     &printVersion,  0,
@@ -261,7 +265,7 @@ int main(int argc, char *argv[]) {
     gsCmd->append(" -q \"");
     gsCmd->append(psFileName);
     gsCmd->append("\"");
-    //printf("running: %s\n", gsCmd->getCString());
+    // printf("running: %s\n", gsCmd->getCString());
     if( !executeCommand(gsCmd->getCString()) && !errQuiet) {
       error(-1, "Failed to launch Ghostscript!\n");
     }

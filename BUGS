@@ -10,12 +10,17 @@ These pages do not have to be processed by ghostscript at all.
 * Related to previous: we need to keep track of rotation of each page and
 specify rotation to ghostscript when needed.
 
-* Plain (non-complex) output might not preserve the order of text.
+* Plain (non-complex) output might not preserve the order of text sometimes.
 
 * For demo1.pdf first font is there twice. This is because we keep separete 
 fonts for <b> and <i> even though they are otherwise identical. Not really 
-a problem, just ugly.
+a problem, just ugly. The solution is not to keep italic and bold attributes
+with text, but rather keep it in HtmlString. Makes more sense.
 
 * command line options for directory where to put extracted images
 
-* command line option to keep complex output in one page
+* command line option to keep complex output in one page (this only possible
+when we stop using ghostscript and one huge image)
+
+* move all the GBool settings for pdf to html conversion into GlobalParams for
+consistency

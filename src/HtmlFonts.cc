@@ -66,7 +66,7 @@ GString *HtmlFontColor::toString() const{
   return tmp;
 } 
 
-HtmlFont::HtmlFont(GString* ftname,int _size,GfxRGB rgb){
+HtmlFont::HtmlFont(GString* ftname,int _size, GfxRGB rgb){
   leak++;
 
   //if (col) color=HtmlFontColor(col); 
@@ -84,6 +84,8 @@ HtmlFont::HtmlFont(GString* ftname,int _size,GfxRGB rgb){
     FontName = NULL;
   }
   
+  lineSize = -1;
+
   size=(_size-1);
   italic = gFalse;
   bold = gFalse;
@@ -106,6 +108,7 @@ HtmlFont::HtmlFont(GString* ftname,int _size,GfxRGB rgb){
 HtmlFont::HtmlFont(const HtmlFont& x){
    leak++;
    size=x.size;
+   lineSize=x.lineSize;
    italic=x.italic;
    bold=x.bold;
    pos=x.pos;
@@ -122,6 +125,7 @@ HtmlFont::~HtmlFont(){
 HtmlFont& HtmlFont::operator=(const HtmlFont& x){
    if (this==&x) return *this; 
    size=x.size;
+   lineSize=x.lineSize;
    italic=x.italic;
    bold=x.bold;
    pos=x.pos;
@@ -144,6 +148,7 @@ void HtmlFont::clear(){
 */
 GBool HtmlFont::isEqual(const HtmlFont& x) const{
   return ((size==x.size) &&
+	  (lineSize==x.lineSize) &&
 	  (pos==x.pos) &&  // this comparison covers italic/bold
 	  (color.isEqual(x.getColor())));
 }
@@ -212,7 +217,7 @@ GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) {
   return tmp;
 }
 
-GString* HtmlFont::simple(HtmlFont font, Unicode* content, int uLen){
+GString* HtmlFont::simple(HtmlFont* font, Unicode* content, int uLen){
   GString *cont=HtmlFilter (content, uLen); 
 
   /*if (font.isBold()) {
@@ -273,12 +278,20 @@ GString* HtmlFontAccu::CSStyle(int i){
    GString *Size=GString::IntToStr(font.getSize());
    GString *colorStr=font.getColor().toString();
    GString *fontName=font.getFontName();
-
+   GString *lSize;
+   
    if(!xml){
      tmp->append(".ft");
      tmp->append(iStr);
      tmp->append("{font-size:");
      tmp->append(Size);
+     if( font.getLineSize() != -1 )
+     {
+	 lSize = GString::IntToStr(font.getLineSize());
+	 tmp->append("px;line-height:");
+	 tmp->append(lSize);
+	 delete lSize;
+     }
      tmp->append("px;font-family:");
      tmp->append(fontName); //font.getFontName());
      tmp->append(";color:");

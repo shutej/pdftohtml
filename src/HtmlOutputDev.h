@@ -130,7 +130,7 @@ public:
   
   void conv();
 private:
-  HtmlFont getFont(HtmlString *hStr) { return fonts->Get(hStr->fontpos); }
+  HtmlFont* getFont(HtmlString *hStr) { return fonts->Get(hStr->fontpos); }
 
   double fontSize;		// current font size
   GBool rawOrder;		// keep strings in content stream order

@@ -10,14 +10,14 @@ GOOSRCDIR = ../goo
 GOOLIBDIR = ../goo
 
 
-CXXFLAGS = -g -DHAVE_DIRENT_H=1  -I.. -DHAVE_REWINDDIR=1 -DHAVE_POPEN=1   -I$(GOOSRCDIR) -I$(SRCDIR) -I$(XPDFSRCDIR)
+CXXFLAGS += -g -DHAVE_DIRENT_H=1  -I.. -DHAVE_REWINDDIR=1 -DHAVE_POPEN=1   -I$(GOOSRCDIR) -I$(SRCDIR) -I$(XPDFSRCDIR)
 #-DDEBUG_MEM
 
 LDFLAGS = 
 
 OTHERLIBS = 
 
-CXX = c++
+CXX ?= c++
 
 LIBPREFIX = lib
 EXE = 
@@ -43,7 +43,8 @@ all: pdftohtml$(EXE)
 
 #-------------------------------------------------------------------------
 
-PDFTOHTML_OBJS = HtmlOutputDev.o HtmlFonts.o HtmlLinks.o pdftohtml.o
+PDFTOHTML_OBJS = HtmlOutputDev.o HtmlFonts.o HtmlLinks.o \
+    pdftohtml.o
 PDFTOHTML_LIBS = -L$(GOOLIBDIR) -L$(XPDFLIBDIR) $(OTHERLIBS) -lXpdf -lGoo -lm
 
 pdftohtml$(EXE): $(PDFTOHTML_OBJS) $(GOOLIBDIR)/$(LIBPREFIX)Goo.a \

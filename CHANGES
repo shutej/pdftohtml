@@ -54,7 +54,7 @@ pdftohtml 0.33a
 -bug fixes
 -join multiple <b></b>'s and <i></i>'s together
 
-pdftohtml ???
+pdftohtml 0.33b
 =============
 -command line option to extract hidden text
 -parts of hrefs (links) are joined together (just like <b> and <i>)

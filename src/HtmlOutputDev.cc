@@ -40,7 +40,7 @@ extern GBool noframes;
 extern GBool stout;
 extern GBool xml;
 extern GBool showHidden;
-
+extern GBool noMerge;
 
 //------------------------------------------------------------------------
 // HtmlString
@@ -187,7 +187,7 @@ void HtmlPage::conv(){
   HtmlString *tmp;
 
   int linkIndex = 0;
-  HtmlFont h;
+  HtmlFont* h;
   for(tmp=yxStrings;tmp;tmp=tmp->yxNext){
      int pos=tmp->fontpos;
      //  printf("%d\n",pos);
@@ -284,10 +284,11 @@ void HtmlPage::endString() {
 
 void HtmlPage::coalesce() {
   HtmlString *str1, *str2;
-  HtmlFont hfont1, hfont2;
-  double space, d;
-  GBool addSpace;
+  HtmlFont *hfont1, *hfont2;
+  double space, d, vertSpace;
+  GBool addSpace, addLineBreak;
   int n, i;
+  double curX, curY;
 
 #if 0 //~ for debugging
   for (str1 = yxStrings; str1; str1 = str1->yxNext) {
@@ -306,31 +307,38 @@ void HtmlPage::coalesce() {
   if( !str1 ) return;
 
   hfont1 = getFont(str1);
-  if( hfont1.isBold() )
+  if( hfont1->isBold() )
     str1->htext->insert(0,"<b>",3);
-  if( hfont1.isItalic() )
+  if( hfont1->isItalic() )
     str1->htext->insert(0,"<i>",3);
   if( str1->getLink() != NULL ) {
     GString *ls = str1->getLink()->getLinkStart();
     str1->htext->insert(0, ls);
     delete ls;
   }
+  curX = str1->xMin; curY = str1->yMin;
 
   while (str1 && (str2 = str1->yxNext)) {
     hfont2 = getFont(str2);
     space = str1->yMax - str1->yMin;
     d = str2->xMin - str1->xMax;
-    if (((rawOrder &&
+    vertSpace = str2->yMin - str1->yMax;
+    if (((((rawOrder &&
 	  ((str2->yMin >= str1->yMin && str2->yMin <= str1->yMax) ||
 	   (str2->yMax >= str1->yMin && str2->yMax <= str1->yMax))) ||
 	 (!rawOrder && str2->yMin < str1->yMax)) &&
-	d > -0.5 * space && d < space &&
-	(hfont1.isEqualIgnoreBold(hfont2))
+	d > -0.5 * space && d < space) ||
+       (!noMerge && vertSpace < 0.3 * space && str1->xMin == str2->xMin)) &&
+	(hfont1->isEqualIgnoreBold(*hfont2))
  	) {
-      n = str1->len + str2->len;
-      if ((addSpace = d > 0.1 * space)) {
-	++n;
-      }
+	n = str1->len + str2->len;
+	if ((addSpace = d > 0.1 * space)) {
+	    ++n;
+	}
+	if ((addLineBreak = str1->xMin == str2->xMin)) {
+	    ++n;
+	}
+
       str1->size = (n + 15) & ~15;
       str1->text = (Unicode *)grealloc(str1->text,
 				       str1->size * sizeof(Unicode));
@@ -342,6 +350,25 @@ void HtmlPage::coalesce() {
 	str1->xRight[str1->len] = str2->xMin;
 	++str1->len;
       }
+      if (addLineBreak) {
+	  str1->text[str1->len] = '\n';
+	  str1->htext->append("<br>");
+	  str1->xRight[str1->len] = str2->xMin;
+	  ++str1->len;
+	  str1->yMin = str2->yMin;
+	  str1->yMax = str2->yMax;
+	  str1->xMax = str2->xMax;
+	  int fontLineSize = hfont1->getLineSize();
+	  int curLineSize = (int)(vertSpace + space); 
+	  if( curLineSize != fontLineSize )
+	  {
+	      HtmlFont *newfnt = new HtmlFont(*hfont1);
+	      newfnt->setLineSize(curLineSize);
+	      str1->fontpos = fonts->AddFont(*newfnt);
+	      hfont1 = newfnt; 
+	  }
+	  // tuta hfont1->setLineSize((unsigned int)vertSpace+space+1);
+      }
       for (i = 0; i < str2->len; ++i) {
 	str1->text[str1->len] = str2->text[i];
 	str1->xRight[str1->len] = str2->xRight[i];
@@ -349,13 +376,13 @@ void HtmlPage::coalesce() {
       }
 
       /* fix <i> and <b> if str1 and str2 differ */
-      if( hfont1.isBold() && !hfont2.isBold() )
+      if( hfont1->isBold() && !hfont2->isBold() )
 	str1->htext->append("</b>", 4);
-      if( hfont1.isItalic() && !hfont2.isItalic() )
+      if( hfont1->isItalic() && !hfont2->isItalic() )
 	str1->htext->append("</i>", 4);
-      if( !hfont1.isBold() && hfont2.isBold() )
+      if( !hfont1->isBold() && hfont2->isBold() )
 	str1->htext->append("<b>", 3);
-      if( !hfont1.isItalic() && hfont2.isItalic() )
+      if( !hfont1->isItalic() && hfont2->isItalic() )
 	str1->htext->append("<i>", 3);
 
       /* now handle switch of links */
@@ -384,18 +411,20 @@ void HtmlPage::coalesce() {
       str1->yxNext = str2->yxNext;
       delete str2;
     } else {
-      if( hfont1.isBold() )
+      if( hfont1->isBold() )
 	str1->htext->append("</b>",4);
-      if( hfont1.isItalic() )
+      if( hfont1->isItalic() )
 	str1->htext->append("</i>",4);
       if(str1->getLink() != NULL )
 	str1->htext->append("</a>");
-      
+     
+      str1->xMin = curX; str1->yMin = curY; 
       str1 = str2;
+      curX = str1->xMin; curY = str1->yMin;
       hfont1 = hfont2;
-      if( hfont1.isBold() )
+      if( hfont1->isBold() )
 	str1->htext->insert(0,"<b>",3);
-      if( hfont1.isItalic() )
+      if( hfont1->isItalic() )
 	str1->htext->insert(0,"<i>",3);
       if( str1->getLink() != NULL ) {
 	GString *ls = str1->getLink()->getLinkStart();
@@ -404,12 +433,24 @@ void HtmlPage::coalesce() {
       }
     }
   }
-  if( hfont1.isBold() )
+  str1->xMin = curX; str1->yMin = curY;
+  if( hfont1->isBold() )
     str1->htext->append("</b>",4);
-  if( hfont1.isItalic() )
+  if( hfont1->isItalic() )
     str1->htext->append("</i>",4);
   if(str1->getLink() != NULL )
     str1->htext->append("</a>");
+
+#if 0 //~ for debugging
+  for (str1 = yxStrings; str1; str1 = str1->yxNext) {
+    printf("x=%3d..%3d  y=%3d..%3d  size=%2d ",
+	   (int)str1->xMin, (int)str1->xMax, (int)str1->yMin, (int)str1->yMax,
+	   (int)(str1->yMax - str1->yMin));
+    printf("'%s'\n", str1->htext->getCString());  
+  }
+  printf("\n------------------------------------------------------------\n\n");
+#endif
+
 }
 
 void HtmlPage::dumpAsXML(FILE* f,int page){  
@@ -489,6 +530,7 @@ void HtmlPage::dumpComplex(int page){
       if (tmp1->fontpos!=-1){
 	str1=fonts->getCSStyle(tmp1->fontpos,str);  
       }
+      //printf("%s\n", str1->getCString());
       fputs(str1->getCString(),f);
       
       delete str;      

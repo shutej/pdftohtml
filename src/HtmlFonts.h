@@ -32,6 +32,7 @@ class HtmlFontColor{
 class HtmlFont{
  private:
    unsigned int size;
+   int lineSize;
    GBool italic;
    GBool bold;
    int pos; // position of the font name in the fonts array
@@ -41,7 +42,7 @@ class HtmlFont{
    static GString* HtmlFilter(Unicode* u, int uLen); //char* s);
 public:  
    HtmlFont(){FontName=NULL;};
-   HtmlFont(GString* fontname,int _size,GfxRGB rgb);
+   HtmlFont(GString* fontname,int _size, GfxRGB rgb);
    HtmlFont(const HtmlFont& x);
    HtmlFont& operator=(const HtmlFont& x);
    HtmlFontColor getColor() const {return color;}
@@ -51,12 +52,14 @@ public:
    GBool isItalic() const {return italic;}
    GBool isBold() const {return bold;}
    unsigned int getSize() const {return size;}
+   int getLineSize() const {return lineSize;}
+   void setLineSize(int _lineSize) { lineSize = _lineSize; }
    GString* getFontName();
    static GString* getDefaultFont();
    static void setDefaultFont(GString* defaultFont);
    GBool isEqual(const HtmlFont& x) const;
    GBool isEqualIgnoreBold(const HtmlFont& x) const;
-   static GString* simple(HtmlFont font, Unicode *content, int uLen);
+   static GString* simple(HtmlFont *font, Unicode *content, int uLen);
    static int leak;
 };
 
@@ -68,10 +71,10 @@ public:
   HtmlFontAccu();
   ~HtmlFontAccu();
   int AddFont(const HtmlFont& font);
-  HtmlFont Get(int i){
+  HtmlFont* Get(int i){
     GVector<HtmlFont>::iterator g=accu->begin();
     g+=i;  
-    return *g;
+    return g;
   } 
   GString* getCSStyle (int i,GString* content);
   GString* CSStyle(int i);
