@@ -25,3 +25,6 @@ consistency
 * when -c -noframes it is obvious that text which is out of the bounding box should be hidden
 
 * xml output is broken because of <i> and <b>s... Not sure what to do with them.
+
+* order of <i> and <b> is broken.
+

@@ -35,9 +35,13 @@ for each page.
 How to compile pdftohtml ?
 ------------------------------
 
-To compile pdftohtml.bin, type : 
+To compile pdftohtml, type : 
    
-    make
+	make
+
+To compile pdftohtml with debug information and memory leak detection type:
+
+	make DEBUG="-g -DDEBUG_MEM"
 
 This version of pdftohtml was tested on Linux, FreeBSD, Solaris, MacOS X 
 and Windows

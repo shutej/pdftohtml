@@ -256,6 +256,10 @@ int main(int argc, char *argv[]) {
   {
       delete keywords;
   }
+  if( subject )
+  {
+      delete subject;
+  }
   if( date )
   {
       delete date;

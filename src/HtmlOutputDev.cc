@@ -492,7 +492,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
       str=new GString(tmp->htext);
       fprintf(f,"<text top=\"%d\" left=\"%d\" ",xoutRound(tmp->yMin),xoutRound(tmp->xMin));
       fprintf(f,"width=\"%d\" height=\"%d\" ",xoutRound(tmp->xMax-tmp->xMin),xoutRound(tmp->yMax-tmp->yMin));
-      fprintf(f,"font=\"%d-%d\">", page, tmp->fontpos);
+      fprintf(f,"font=\"%d\">", tmp->fontpos);
       if (tmp->fontpos!=-1){
 	str1=fonts->getCSStyle(tmp->fontpos, str);
       }
@@ -537,6 +537,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   {
       pageFile = file;
       fprintf(pageFile,"<!-- Page %d -->\n", page);
+      fprintf(pageFile,"<a name=\"page_%d\"></a>\n", page); 
       fprintf(pageFile,"<DIV style=\"position:relative;\">\n");
   } 
 
@@ -559,7 +560,7 @@ void HtmlPage::dumpComplex(FILE *file, int page){
   if( !ignore ) {
     //fputs("<DIV style=\"position:absolute;top:0;left:0\">",pageFile);
     fprintf(pageFile,
-	    "<IMG width=\"%d\" height=\"%d\" src=\"%s%03d.png\" alt=\"background image\">",
+	    "<IMG width=\"%d\" height=\"%d\" src=\"%s%03d.png\" alt=\"background image\">\n",
 	    pageWidth,pageHeight,tmp->getCString(),page);
     //fputs("</DIV>",pageFile);
   }
@@ -1168,90 +1169,104 @@ void HtmlOutputDev::drawLink(Link* link,Catalog *cat){
 
 GString* HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
   char *p;
-  switch(link->getAction()->getKind()) {
-  case actionGoTo:{ 
-    GString* file=basename(Docname);
-    int page=1;
-    LinkGoTo *ha=(LinkGoTo *)link->getAction();
-    LinkDest *dest=NULL;
-    if (ha->getDest()==NULL) dest=catalog->findDest(ha->getNamedDest());
-    else dest=ha->getDest()->copy();
-    if (dest){ 
-      if (dest->isPageRef()){
-	Ref pageref=dest->getPageRef();
-	page=catalog->findPage(pageref.num,pageref.gen);
-      }
-      else {
-	page=dest->getPageNum();
-      }
-      
-      delete dest;
+  switch(link->getAction()->getKind()) 
+  {
+      case actionGoTo:
+	  { 
+	  GString* file=basename(Docname);
+	  int page=1;
+	  LinkGoTo *ha=(LinkGoTo *)link->getAction();
+	  LinkDest *dest=NULL;
+	  if (ha->getDest()==NULL) 
+	      dest=catalog->findDest(ha->getNamedDest());
+	  else 
+	      dest=ha->getDest()->copy();
+	  if (dest){ 
+	      if (dest->isPageRef()){
+		  Ref pageref=dest->getPageRef();
+		  page=catalog->findPage(pageref.num,pageref.gen);
+	      }
+	      else {
+		  page=dest->getPageNum();
+	      }
 
-      GString *str=GString::fromInt(page);
-      if (mode) file->append("-");
-      else{ 
-	if (!noframes) file->append("s");
-	file->append(".html#");
-      }
-      file->append(str);
-      if (mode) file->append(".html");
-      if (printCommands) printf(" page %d ",page);
-      delete str;
-      return file;
-    }
-    else return new GString();
-  }
+	      delete dest;
+
+	      GString *str=GString::fromInt(page);
+	      if (mode)
+	      { 
+		  file->append("-");
+	      }
+	      else
+	      { 
+		  if (!noframes) file->append("s");
+		  file->append(".html#");
+	      }
+	      file->append(str);
+	      if (mode) file->append(".html");
+	      if (printCommands) printf(" link to page %d ",page);
+	      delete str;
+	      return file;
+	  }
+	  else 
+	  {
+	      return new GString();
+	  }
+	  }
+      case actionGoToR:
+	  {
+	  LinkGoToR *ha=(LinkGoToR *) link->getAction();
+	  LinkDest *dest=NULL;
+	  int page=1;
+	  GString *file=new GString();
+	  if (ha->getFileName()){
+	      delete file;
+	      file=new GString(ha->getFileName()->getCString());
+	  }
+	  if (ha->getDest()!=NULL)  dest=ha->getDest()->copy();
+	  if (dest&&file){
+	      if (!(dest->isPageRef()))  page=dest->getPageNum();
+	      delete dest;
+
+	      if (printCommands) printf(" link to page %d ",page);
+	      if (printHtml){
+		  p=file->getCString()+file->getLength()-4;
+		  if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")){
+		      file->del(file->getLength()-4,4);
+		      file->append(".html");
+		  }
+		  file->append('#');
+		  file->append(GString::fromInt(page));
+	      }
+	  }
+	  if (printCommands) printf("filename %s\n",file->getCString());
+	  return file;
+	  }
+      case actionURI:
+	  { 
+	  LinkURI *ha=(LinkURI *) link->getAction();
+	  GString* file=new GString(ha->getURI()->getCString());
+	  // printf("uri : %s\n",file->getCString());
+	  return file;
+	  }
+      case actionLaunch:
+	  {
+	  LinkLaunch *ha=(LinkLaunch *) link->getAction();
+	  GString* file=new GString(ha->getFileName()->getCString());
+	  if (printHtml) { 
+	      p=file->getCString()+file->getLength()-4;
+	      if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")){
+		  file->del(file->getLength()-4,4);
+		  file->append(".html");
+	      }
+	      if (printCommands) printf("filename %s",file->getCString());
+    
+	      return file;      
   
-  case actionGoToR:{              
-    LinkGoToR *ha=(LinkGoToR *) link->getAction();
-    LinkDest *dest=NULL;
-    int page=1;
-    GString *file=new GString();
-    if (ha->getFileName()){
-      delete file;
-      file=new GString(ha->getFileName()->getCString());
-    }
-    if (ha->getDest()!=NULL)  dest=ha->getDest()->copy();
-    if (dest&&file){
-      if (!(dest->isPageRef()))  page=dest->getPageNum();
-      delete dest;
-
-      if (printCommands) printf(" page %d ",page);
-      if (printHtml){
-	p=file->getCString()+file->getLength()-4;
-	if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")){
-	  file->del(file->getLength()-4,4);
-	  file->append(".html");
-	}
-	file->append('#');
-	file->append(GString::fromInt(page));
-      }
-    }
-    if (printCommands) printf("filename %s\n",file->getCString());
-    return file;
-  }
-  case actionURI: {
-    LinkURI *ha=(LinkURI *) link->getAction();
-    GString* file=new GString(ha->getURI()->getCString());
-    // printf("uri : %s\n",file->getCString());
-    return file;
-  }
-       
-  case actionLaunch: {
-    LinkLaunch *ha=(LinkLaunch *) link->getAction();
-    GString* file=new GString(ha->getFileName()->getCString());
-    if (printHtml) { 
-      p=file->getCString()+file->getLength()-4;
-      if (!strcmp(p, ".pdf") || !strcmp(p, ".PDF")){
-	file->del(file->getLength()-4,4);
-	file->append(".html");
-      }
-      if (printCommands) printf("filename %s",file->getCString());
-    }
-    return file;      
-  }
-  default:
-    return new GString();
+	  }
+	  }
+      default:
+	  return new GString();
   }
 }
 
