@@ -52,10 +52,7 @@ cd ..\xpdf
 %LIBPROG% /nologo /out:libxpdf.lib Array.obj BuiltinFont.obj BuiltinFontTables.obj CMap.obj Catalog.obj CharCodeToUnicode.obj Decrypt.obj Dict.obj Error.obj FontEncodingTables.obj FontFile.obj FormWidget.obj Function.obj Gfx.obj GfxFont.obj GfxState.obj GlobalParams.obj ImageOutputDev.obj Lexer.obj Link.obj NameToCharCode.obj Object.obj OutputDev.obj PDFDoc.obj PSOutputDev.obj Page.obj Parser.obj Stream.obj TextOutputDev.obj UnicodeMap.obj XRef.obj
 
 %CXX% %CXXFLAGS% /c pdftops.cc
-%CXX% %CXXFLAGS% /c pdftotext.cc
-%CXX% %CXXFLAGS% /c pdfinfo.cc
-%CXX% %CXXFLAGS% /c pdffonts.cc
-%CXX% %CXXFLAGS% /c pdfimages.cc
+%CXX% %CXXFLAGS% /c pdftohtml.cc
 
 cd ..\src
 %CXX% %CXXFLAGS% /c HtmlFonts.cc
@@ -66,13 +63,6 @@ cd ..\src
 cd ..\xpdf
 %CXX% /nologo /Fepdftops.exe  pdftops.obj ..\goo\libGoo.lib ..\xpdf\libxpdf.lib
 
-%CXX% /nologo /Fepdftotext.exe pdftotext.obj ..\goo\libGoo.lib ..\xpdf\libxpdf.lib
-
-%CXX% /nologo /Fepdfinfo.exe  pdfinfo.obj ..\goo\libGoo.lib ..\xpdf\libxpdf.lib
-
-%CXX% /nologo /Fepdffonts.exe pdffonts.obj ..\goo\libGoo.lib ..\xpdf\libxpdf.lib
-
-%CXX% /nologo /Fepdfimages.exe libxpdf.lib pdfimages.obj ..\goo\libGoo.lib ..\xpdf\libxpdf.lib
 
 cd ..\src
 %CXX% /nologo /Fepdftohtml.exe HtmlFonts.obj HtmlLinks.obj HtmlOutputDev.obj  pdftohtml.obj ..\goo\libGoo.lib ..\xpdf\libxpdf.lib
