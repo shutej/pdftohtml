@@ -303,6 +303,8 @@ GString* HtmlFontAccu::CSStyle(int i, int page){
    }
    if (xml) {
      tmp->append("<fontspec id=\"");
+     tmp->append(pStr);
+     tmp->append("-");
      tmp->append(iStr);
      tmp->append("\" size=\"");
      tmp->append(Size);

@@ -474,7 +474,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
       str=new GString(tmp->htext);
       fprintf(f,"<text top=\"%d\" left=\"%d\" ",xoutRound(tmp->yMin),xoutRound(tmp->xMin));
       fprintf(f,"width=\"%d\" height=\"%d\" ",xoutRound(tmp->xMax-tmp->xMin),xoutRound(tmp->yMax-tmp->yMin));
-      fprintf(f,"font=\"%d\">", tmp->fontpos);
+      fprintf(f,"font=\"%d-%d\">", page, tmp->fontpos);
       if (tmp->fontpos!=-1){
 	str1=fonts->getCSStyle(tmp->fontpos, page, str);
       }
