@@ -36,6 +36,7 @@ pdftohtml 0.32 (*test* version)
 -updated to use xpdf 1.0
 
 pdftohtml 0.32b
+===============
 -experimental ability to specify output encoding (UTF-8 might work)
 -ability to specify user/master password
 -fixed core dump on documents with type 3 fonts only
@@ -47,3 +48,8 @@ pdftohtml 0.33
 -ps output (for complex mode) is produced by pdftohtml, got rid of pdftops
 -several XML-related fixes
 -several memory leaks fixed (should not crash on large files now)
+
+pdftohtml 0.33a
+===============
+-bug fixes
+-join multiple <b></b> together
