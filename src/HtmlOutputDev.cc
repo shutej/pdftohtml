@@ -187,8 +187,11 @@ extern GBool xml;
 // HtmlString
 //------------------------------------------------------------------------
 
-
-
+#ifdef WIN32
+#  define SLASH '\\'
+#else
+#  define SLASH '/'
+#endif
 
 
 GString* basename(GString* str){
@@ -196,7 +199,7 @@ GString* basename(GString* str){
   char *p=str->getCString();
   int len=str->getLength();
   for (int i=len-1;i>=0;i--)
-    if (*(p+i)=='/') 
+    if (*(p+i)==SLASH) 
       return new GString((p+i+1),len-i-1);
   return new GString(str);
 }
@@ -206,7 +209,7 @@ GString* Dirname(GString* str){
   char *p=str->getCString();
   int len=str->getLength();
   for (int i=len-1;i>=0;i--)
-    if (*(p+i)=='/') 
+    if (*(p+i)==SLASH) 
       return new GString(p,i+1);
   return new GString();
 } 
