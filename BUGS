@@ -31,3 +31,5 @@ consistency
 * order of <i> and <b> is broken.
 
 * when -c -noframes -stdout output could probably go to stdout, but does not
+
+* in xml output give an options of preserving more information about fonts

@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
   if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.36beta", xpdfVersion);
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.36", xpdfVersion);
     fprintf(stderr, "%s\n", "Copyright 1999-2003 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "%s\n\n", xpdfCopyright);
     if (!printVersion) {
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
   if (textEncName[0]) {
     globalParams->setTextEncoding(textEncName);
     if( !globalParams->getTextEncoding() )  {
-	goto err1;    
+	goto error;    
     }
   }
 
@@ -169,13 +169,13 @@ int main(int argc, char *argv[]) {
     delete ownerPW;
   }
   if (!doc->isOk()) {
-    goto err1;
+    goto error;
   }
 
   // check for copy permission
   if (!doc->okToCopy()) {
     error(-1, "Copying of text from this document is not allowed.");
-    goto err2;
+    goto error;
   }
 
   // construct text file name
@@ -244,14 +244,15 @@ int main(int argc, char *argv[]) {
   if( !docTitle ) docTitle = new GString(htmlFileName);
 
   /* determine extensions of output backgroun images */
-  for(int i = 0; extsList[i]; i++)
+  {int i;
+  for(i = 0; extsList[i]; i++)
   {
 	  if( strstr(gsDevice, extsList[i]) != (char *) NULL )
 	  {
 		  strncpy(extension, extsList[i], sizeof(extension));
 		  break;
 	  }
-  }
+  }}
 
   rawOrder = complexMode; // todo: figure out what exactly rawOrder do :)
 
@@ -350,8 +351,7 @@ int main(int argc, char *argv[]) {
   delete htmlOut;
 
   // clean up
- err2:
- err1:
+ error:
   if(doc) delete doc;
   if(globalParams) delete globalParams;
 

@@ -865,7 +865,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
   pages = new HtmlPage(rawOrder, extension);
   
   glMetaVars = new GList();
-  glMetaVars->append(new HtmlMetaVar("generator", "pdftohtml 0.36beta"));  
+  glMetaVars->append(new HtmlMetaVar("generator", "pdftohtml 0.36"));  
   if( author ) glMetaVars->append(new HtmlMetaVar("author", author));  
   if( keywords ) glMetaVars->append(new HtmlMetaVar("keywords", keywords));  
   if( date ) glMetaVars->append(new HtmlMetaVar("date", date));  
