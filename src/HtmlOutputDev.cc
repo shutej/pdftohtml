@@ -672,7 +672,7 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GString *title,
       fprintf(page, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
       fprintf(page, "%s\n", GENERATOR);
       fprintf(page,"</head>\n");
-      fprintf(page,"<body bgcolor=\"#A0A0A0>\" vlink=\"blue\" link=\"blue\">\n");
+      fprintf(page,"<body bgcolor=\"#A0A0A0\" vlink=\"blue\" link=\"blue\">\n");
     }
   }    
   
