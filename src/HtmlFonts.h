@@ -34,7 +34,7 @@ class HtmlFont{
    unsigned int size;
    GBool italic;
    GBool bold;
-   int pos;
+   int pos; // position of the font name in the fonts array
    static GString *DefaultFont;
    GString *FontName;
    HtmlFontColor color;

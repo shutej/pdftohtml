@@ -138,8 +138,12 @@ void HtmlFont::clear(){
 
 
 
+// tuta, todo
 GBool HtmlFont::isEqual(const HtmlFont& x) const{
-  return ((size==x.size)&&(pos==x.pos)&&(color.isEqual(x.getColor())));
+  return ((size==x.size) &&
+	  (pos==x.pos) && 
+	  //	  (!strcmp(fonts[pos].name, fonts[x.pos].name)) &&
+	  (color.isEqual(x.getColor())));
   // (bold==x.bold)&&(italic==x.italic))
 }
 

@@ -47,7 +47,7 @@ GOO_CXX_OBJS = GHash.o GList.o GString.o gmempp.o gfile.o
 GOO_C_OBJS = gmem.o parseargs.o
 GOO_OBJS = $(GOO_CXX_OBJS) $(GOO_C_OBJS)
 
-$(LIBPREFIX)Goo.a: $(GOO_OBJS)
+$(LIBPREFIX)Goo.a: $(GOO_OBJS) $(GOO_C_OBJS)
 	rm -f $(LIBPREFIX)Goo.a
 	$(AR) $(LIBPREFIX)Goo.a $(GOO_OBJS)
 	$(RANLIB) $(LIBPREFIX)Goo.a

@@ -566,43 +566,43 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
      delete left;
      fputs("<html>\n<head>\n<title></title>\n</head>\n<body>\n",f);
      
-     GString* right=new GString(fileName);
-     right->append("s.html");
      if(!mode){
+       GString* right=new GString(fileName);
+       right->append("s.html");
+
        if (!(page=fopen(right->getCString(),"w"))){
-        delete right;
         error(-1, "Couldn't open html file '%s'", right->getCString());
+        delete right;
 	return;
        }
-     delete right;
-     fputs("<html>\n<head>\n<title></title>\n</head>\n<body>\n",page);
-    }
+       delete right;
+       fputs("<html>\n<head>\n<title></title>\n</head>\n<body>\n",page);
+     }
   }
 
-  if (noframes){
-     if (stout) page=stdout;
-     else{
-       GString* right=new GString(fileName);
-       if (!xml) right->append(".html");
-       if (xml) right->append(".xml");
-       if (!(page=fopen(right->getCString(),"w"))){
-         delete right;
-         error(-1, "Couldn't open html file '%s'", right->getCString());
-	 return;
-       }  
-       delete right;
-     }
-     if (xml) {
-       fputs("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n", page);
-       fputs("<!DOCTYPE pdf2xml SYSTEM \"pdf2xml.dtd\">\n\n", page);
-       fputs("<pdf2xml>\n",page);
-     } else {
-     
-       fprintf(page,"<html>\n<head>\n<title>%s</title>\n</head>\n",tmp->getCString());
-       fputs("<body bgcolor=\"#A0A0A0>\" vlink=\"blue\" link=\"blue\">\n",page);
-     }
-   }    
-
+  if (noframes) {
+    if (stout) page=stdout;
+    else {
+      GString* right=new GString(fileName);
+      if (!xml) right->append(".html");
+      if (xml) right->append(".xml");
+      if (!(page=fopen(right->getCString(),"w"))){
+	delete right;
+	error(-1, "Couldn't open html file '%s'", right->getCString());
+	return;
+      }  
+      delete right;
+    }
+    if (xml) {
+      fputs("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n", page);
+      fputs("<!DOCTYPE pdf2xml SYSTEM \"pdf2xml.dtd\">\n\n", page);
+      fputs("<pdf2xml>\n",page);
+    } else {
+      fprintf(page,"<html>\n<head>\n<title>%s</title>\n</head>\n",tmp->getCString());
+      fputs("<body bgcolor=\"#A0A0A0>\" vlink=\"blue\" link=\"blue\">\n",page);
+    }
+  }    
+  
   delete tmp;
 }
 
@@ -930,14 +930,18 @@ GString *HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
     LinkGoTo *ha=(LinkGoTo *)link->getAction();
     LinkDest *dest=NULL;
     if (ha->getDest()==NULL) dest=catalog->findDest(ha->getNamedDest());
-    else dest=ha->getDest();
+    else dest=ha->getDest()->copy();
     if (dest){ 
       if (dest->isPageRef()){
 	Ref pageref=dest->getPageRef();
 	page=catalog->findPage(pageref.num,pageref.gen);
       }
-      else  page=dest->getPageNum();
+      else {
+	page=dest->getPageNum();
+      }
       
+      delete dest;
+
       GString *str=GString::IntToStr(page);
       if (mode) file->append("-");
       else{ 
@@ -962,9 +966,11 @@ GString *HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
       delete file;
       file=new GString(ha->getFileName()->getCString());
     }
-    if (ha->getDest()!=NULL)  dest=ha->getDest();
+    if (ha->getDest()!=NULL)  dest=ha->getDest()->copy();
     if (dest&&file){
       if (!(dest->isPageRef()))  page=dest->getPageNum();
+      delete dest;
+
       if (printCommands) printf(" page %d ",page);
       if (printHtml){
 	p=file->getCString()+file->getLength()-4;
