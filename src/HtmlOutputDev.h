@@ -188,6 +188,7 @@ public:
   HtmlOutputDev(char *fileName, char *title, 
 	  char *author,
 	  char *keywords,
+	  char *subject,
 	  char *date,
 	  GBool rawOrder);
 

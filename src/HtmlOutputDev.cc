@@ -753,7 +753,7 @@ void HtmlOutputDev::doFrame(){
 }
 
 HtmlOutputDev::HtmlOutputDev(char *fileName, char *title, 
-	char *author, char *keywords, char *date,
+	char *author, char *keywords, char *subject, char *date,
 	GBool rawOrder) 
 {
   GString *htmlEncoding;
@@ -776,7 +776,8 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
   if( author ) glMetaVars->append(new HtmlMetaVar("author", author));  
   if( keywords ) glMetaVars->append(new HtmlMetaVar("keywords", keywords));  
   if( date ) glMetaVars->append(new HtmlMetaVar("date", date));  
-  
+  if( subject ) glMetaVars->append(new HtmlMetaVar("subject", subject));
+ 
   maxPageWidth = 0;
   maxPageHeight = 0;
 

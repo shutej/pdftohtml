@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
   PDFDoc *doc = NULL;
   GString *fileName = NULL;
   GString *docTitle = NULL;
-  GString *author = NULL, *keywords = NULL, *date = NULL;
+  GString *author = NULL, *keywords = NULL, *subject = NULL, *date = NULL;
   GString *htmlFileName = NULL;
   GString *psFileName = NULL;
   HtmlOutputDev *htmlOut = NULL;
@@ -231,6 +231,7 @@ int main(int argc, char *argv[]) {
     docTitle = getInfoString(info.getDict(), "Title");
     author = getInfoString(info.getDict(), "Author");
     keywords = getInfoString(info.getDict(), "Keywords");
+    subject = getInfoString(info.getDict(), "Subject");
     date = getInfoDate(info.getDict(), "ModDate");
     if( !date )
 	date = getInfoDate(info.getDict(), "CreationDate");
@@ -243,6 +244,7 @@ int main(int argc, char *argv[]) {
 	  docTitle->getCString(), 
 	  author ? author->getCString() : NULL,
 	  keywords ? keywords->getCString() : NULL, 
+          subject ? subject->getCString() : NULL, 
 	  date ? date->getCString() : NULL,
 	  rawOrder);
   delete docTitle;

@@ -1,4 +1,4 @@
-Known bugs (and TODOs) in pdftohtml 0.33:
+Known bugs (and TODOs) in pdftohtml 0.34
 
 * Complex output will not work correctly when there are pages of different size
 (large background image will be screwed up)
@@ -21,3 +21,7 @@ with text, but rather keep it in HtmlString. Makes more sense.
 
 * move all the GBool settings for pdf to html conversion into GlobalParams for
 consistency
+
+* when -c -noframes it is obvious that text which is out of the bounding box should be hidden
+
+* xml output is broken because of <i> and <b>s... Not sure what to do with them.
