@@ -1,5 +1,3 @@
-
-
 SHELL = /bin/sh
 
 prefix = /usr/local
@@ -28,11 +26,3 @@ distdepend:
 	rm -f pdftops.bin
 	cd goo; $(MAKE) distdepend
 	cd xpdf; $(MAKE) distdepend
-
-
-
-
-
-
-
-

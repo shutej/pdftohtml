@@ -895,7 +895,14 @@ void HtmlOutputDev::endPage() {
   pages->conv();
   pages->coalesce();
   pages->dump(page);
-  if(!noframes&&!xml) fputs("<br>", f);
+
+  if( xml ){ // TEMP! in fact I should *always* do this
+    // reset page width and height so that it will be updated for the new page
+    pages->pageWidth = 0;
+    pages->pageHeight = 0;
+  }
+  
+if(!noframes&&!xml) fputs("<br>", f);
   if(!stout && !globalParams->getErrQuiet()) printf("Page-%d\n",(pageNum));
   pageNum++ ;
 }
