@@ -2,7 +2,7 @@
 //
 // config.h
 //
-// Copyright 1996-2002 Glyph & Cog, LLC
+// Copyright 1996-2003 Glyph & Cog, LLC
 //
 //========================================================================
 
@@ -14,18 +14,23 @@
 //------------------------------------------------------------------------
 
 // xpdf version
-#define xpdfVersion         "2.01"
-#define xpdfVersionNum      2.01
+#define xpdfVersion         "2.02"
+#define xpdfVersionNum      2.02
 #define xpdfMajorVersion    2
-#define xpdfMinorVersion    1
+#define xpdfMinorVersion    2
 #define xpdfMajorVersionStr "2"
+#define xpdfMinorVersionStr "2"
 
 // supported PDF version
 #define supportedPDFVersionStr "1.4"
 #define supportedPDFVersionNum 1.4
 
 // copyright notice
-#define xpdfCopyright "Copyright 1996-2002 Glyph & Cog, LLC"
+#define xpdfCopyright "Copyright 1996-2003 Glyph & Cog, LLC"
+
+// Windows resource file stuff
+#define winxpdfVersion "WinXpdf 2.02"
+#define xpdfCopyrightAmp "Copyright 1996-2003 Glyph && Cog, LLC"
 
 //------------------------------------------------------------------------
 // paper size
@@ -87,34 +92,6 @@
 #else
 #define POPEN_READ_MODE "r"
 #endif
-
-//------------------------------------------------------------------------
-// uncompress program
-//------------------------------------------------------------------------
-
-#ifdef HAVE_POPEN
-
-// command to uncompress to stdout
-#  ifdef USE_GZIP
-#    define uncompressCmd "gzip -d -c -q"
-#  else
-#    ifdef __EMX__
-#      define uncompressCmd "compress -d -c"
-#    else
-#      define uncompressCmd "uncompress -c"
-#    endif // __EMX__
-#  endif // USE_GZIP
-
-#else // HAVE_POPEN
-
-// command to uncompress a file
-#  ifdef USE_GZIP
-#    define uncompressCmd "gzip -d -q"
-#  else
-#    define uncompressCmd "uncompress"
-#  endif // USE_GZIP
-
-#endif // HAVE_POPEN
 
 //------------------------------------------------------------------------
 // Win32 stuff
