@@ -121,8 +121,7 @@ int main(int argc, char *argv[]) {
     }
     exit(1);
   }
-  fileName = new GString(argv[1]);
-
+ 
   // init error file
   //errorInit();
 
@@ -136,6 +135,9 @@ int main(int argc, char *argv[]) {
 
   if (textEncName[0]) {
     globalParams->setTextEncoding(textEncName);
+    if( !globalParams->getTextEncoding() )  {
+	goto err1;    
+    }
   }
 
   // open PDF file
@@ -149,6 +151,9 @@ int main(int argc, char *argv[]) {
   } else {
     userPW = NULL;
   }
+
+  fileName = new GString(argv[1]);
+
   doc = new PDFDoc(fileName, ownerPW, userPW);
   if (userPW) {
     delete userPW;

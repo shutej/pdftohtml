@@ -188,7 +188,7 @@ GString* HtmlFont::HtmlFilter(Unicode* u, int uLen) {
 
   // get the output encoding
   if (!(uMap = globalParams->getTextEncoding())) {
-    return NULL;
+    return tmp;
   }
 
   for (int i = 0; i < uLen; ++i) {
