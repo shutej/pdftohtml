@@ -509,6 +509,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
 void HtmlPage::dumpComplex(FILE *file, int page){
   FILE* pageFile;
   GString* tmp;
+  GString *htmlEncoding;
   
   if( !noframes )
   {
@@ -526,7 +527,11 @@ void HtmlPage::dumpComplex(FILE *file, int page){
 
       fprintf(pageFile,"%s\n<HTML>\n<HEAD>\n<TITLE>Page %d</TITLE>\n\n",
 	      DOCTYPE, page);
-      fprintf(pageFile, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
+
+      htmlEncoding = HtmlOutputDev::mapEncodingToHtml
+	  (globalParams->getTextEncodingName());
+      fprintf(pageFile, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
+      delete htmlEncoding;
   }
   else 
   {
@@ -749,7 +754,10 @@ void HtmlOutputDev::doFrame(){
 
 HtmlOutputDev::HtmlOutputDev(char *fileName, char *title, 
 	char *author, char *keywords, char *date,
-	GBool rawOrder) {
+	GBool rawOrder) 
+{
+  GString *htmlEncoding;
+  
   f=NULL;
   docTitle = new GString(title);
   pages = NULL;
@@ -825,7 +833,11 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, char *title,
     } else {
       fprintf(page,"%s\n<HTML>\n<HEAD>\n<TITLE>%s</TITLE>\n",
 	      DOCTYPE, docTitle->getCString());
-      fprintf(page, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", globalParams->getTextEncodingName()->getCString());
+      
+      htmlEncoding = mapEncodingToHtml(globalParams->getTextEncodingName());
+      fprintf(page, "<META http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n", htmlEncoding->getCString());
+      delete htmlEncoding;
+      
       dumpMetaVars(page);
       fprintf(page,"</HEAD>\n");
       fprintf(page,"<BODY bgcolor=\"#A0A0A0\" vlink=\"blue\" link=\"blue\">\n");

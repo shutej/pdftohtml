@@ -37,7 +37,7 @@ How to compile pdftohtml ?
 
 To compile pdftohtml.bin, type : 
    
-    gmake
+    make
 
 This version of pdftohtml was tested on Linux, FreeBSD, Solaris, MacOS X 
 and Windows
