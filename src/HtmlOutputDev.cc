@@ -139,7 +139,7 @@ void HtmlString::endString()
 {
   if( dir == textDirRightLeft && len > 1 )
   {
-    printf("will reverse!\n");
+    //printf("will reverse!\n");
     for (int i = 0; i < len / 2; i++)
     {
       Unicode ch = text[i];
@@ -370,7 +370,7 @@ void HtmlPage::coalesce() {
 				fabs(str3->xMax - str1->xMax) < size * 0.2)
 			{
 				found = gTrue;
-				printf("found!\n");
+				//printf("found duplicate!\n");
 				break;
 			}
 		}

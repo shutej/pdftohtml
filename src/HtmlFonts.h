@@ -41,6 +41,7 @@ class HtmlFont{
    HtmlFontColor color;
    static GString* HtmlFilter(Unicode* u, int uLen); //char* s);
 public:  
+
    HtmlFont(){FontName=NULL;};
    HtmlFont(GString* fontname,int _size, GfxRGB rgb);
    HtmlFont(const HtmlFont& x);
@@ -60,6 +61,7 @@ public:
    GBool isEqual(const HtmlFont& x) const;
    GBool isEqualIgnoreBold(const HtmlFont& x) const;
    static GString* simple(HtmlFont *font, Unicode *content, int uLen);
+   void print() const {printf("font: %s %d %s%spos: %d\n", FontName->getCString(), size, bold ? "bold " : "", italic ? "italic " : "", pos);};
 };
 
 class HtmlFontAccu{

@@ -8,7 +8,9 @@
     char *name;
   };
 
-  static Fonts fonts[]={  
+const int font_num=13;
+
+static Fonts fonts[font_num+1]={  
      {"Courier",               "Courier" },
      {"Courier-Bold",           "Courier"},
      {"Courier-BoldOblique",    "Courier"},
@@ -28,7 +30,6 @@
 #define xoutRound(x) ((int)(x + 0.5))
 extern GBool xml;
 
-const int font_num=13;
 GString* HtmlFont::DefaultFont=new GString("Times"); // Arial,Helvetica,sans-serif
 
 HtmlFontColor::HtmlFontColor(GfxRGB rgb){
@@ -94,7 +95,10 @@ HtmlFont::HtmlFont(GString* ftname,int _size, GfxRGB rgb){
 	strstr(fontname->lowerCase()->getCString(),"oblique"))  italic=gTrue;
     
     int i=0;
-    while (strcmp(ftname->getCString(),fonts[i].Fontname)&&(i<font_num)) i++;
+    while (strcmp(ftname->getCString(),fonts[i].Fontname)&&(i<font_num)) 
+	{
+		i++;
+	}
     pos=i;
     delete fontname;
   }  
@@ -144,7 +148,7 @@ void HtmlFont::clear(){
 GBool HtmlFont::isEqual(const HtmlFont& x) const{
   return ((size==x.size) &&
 	  (lineSize==x.lineSize) &&
-	  (pos==x.pos) &&  // this comparison covers italic/bold
+	  (pos==x.pos) && (bold==x.bold) && (italic==x.italic) &&
 	  (color.isEqual(x.getColor())));
 }
 
@@ -238,9 +242,15 @@ HtmlFontAccu::~HtmlFontAccu(){
 int HtmlFontAccu::AddFont(const HtmlFont& font){
  GVector<HtmlFont>::iterator i; 
  for (i=accu->begin();i!=accu->end();i++)
-    if (font.isEqual(*i)) return (int)(i-(accu->begin())) ;
-  accu->push_back(font);
-  return (accu->size()-1);
+ {
+	if (font.isEqual(*i)) 
+	{
+		return (int)(i-(accu->begin()));
+	}
+ }
+
+ accu->push_back(font);
+ return (accu->size()-1);
 }
 
 // get CSS font name for font #i 
