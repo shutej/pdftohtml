@@ -816,8 +816,8 @@ HtmlOutputDev::HtmlOutputDev(char *fileName, GBool rawOrder) {
        delete right;
      }
      if (xml) {
-       fputs("<?XML version=\"1.0\" encoding=\"iso-8859-1\"?>\n", page);
-       fputs("<!DOCTYPE pdf2xml PUBLIC \"pdf2xml\">\n\n", page);
+       fputs("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n", page);
+       fputs("<!DOCTYPE pdf2xml SYSTEM \"pdf2xml.dtd\">\n\n", page);
        fputs("<pdf2xml>\n",page);
      } else {
      

@@ -32,7 +32,7 @@ FRAMES=""
 CSS=""
 IGNOREIMAGES=""
 
-while getopts f:l:d:o:s:qcFihx OPT; do
+while getopts e:f:l:d:o:s:qcFihx OPT; do
   case "$OPT" in
   f)
     FIRST="-f $OPTARG";;
@@ -76,19 +76,19 @@ if [ $# -eq 0 ]; then
 fi
 
 PDFFILE=$1
-if [ x$DIR = "x" ]; then
-  DIR=./`basename $PDFFILE .pdf`
+if [ x"$DIR" = "x" ]; then
+  DIR=./`basename "$PDFFILE" .pdf`
 fi
 
 # Check if target directory exists
-if [ ! -x $DIR ]; then
-  mkdir -p $DIR
+if [ ! -x "$DIR" ]; then
+  mkdir -p "$DIR"
 fi
 
-$PDFTOHTMLBIN_DIR/pdftohtml.bin $FRAMES $STDOUT $FIRST $LAST $EXT $QUIET $CSS $IGNOREIMAGES $SCALE $ENC $XML $PDFFILE $DIR/$TARGET
+$PDFTOHTMLBIN_DIR/pdftohtml.bin $FRAMES $STDOUT $FIRST $LAST $EXT $QUIET $CSS $IGNOREIMAGES $SCALE $ENC $XML "$PDFFILE" "$DIR"/$TARGET
 
 
-image=$DIR/image.log
+image="$DIR"/image.log
 
 if [ x$CSS = "x" ]; then
   exit 0;
@@ -100,18 +100,18 @@ if [ x$IGNOREIMAGES = "x" ]; then
     PAPER_WIDTH=""
     PAPER_HEIGHT=""
 
-    PAPER_WIDTH=`grep "PAPER_WIDTH" $image` 
+    PAPER_WIDTH=`grep "PAPER_WIDTH" "$image"` 
     PAPER_WIDTH=`echo $PAPER_WIDTH|cut -f2 -d'='`
 
-    PAPER_HEIGHT=`grep "PAPER_HEIGHT" $image`
+    PAPER_HEIGHT=`grep "PAPER_HEIGHT" "$image"`
     PAPER_HEIGHT=`echo $PAPER_HEIGHT|cut -f2 -d'='`
  
-    PAPER_ROTATE=`grep "ROTATE" $image`
+    PAPER_ROTATE=`grep "ROTATE" "$image"`
     PAPER_ROTATE=`echo $PAPER_ROTATE|cut -f2 -d'='`
     
-    $PDFTOHTMLBIN_DIR/pdftops.bin $FIRST $LAST -paperw $PAPER_WIDTH -paperh $PAPER_HEIGHT -notext $PDFFILE $DIR/$PSFILE
+    $PDFTOHTMLBIN_DIR/pdftops.bin $FIRST $LAST -paperw $PAPER_WIDTH -paperh $PAPER_HEIGHT -notext "$PDFFILE" "$DIR"/$PSFILE
 
-    cd $DIR
+    cd "$DIR"
 
     echo $PAPER_ROTATE |gs -sDEVICE=png16m -g${PAPER_WIDTH}x${PAPER_HEIGHT} -r72 -sOutputFile=$HEAD%03d.png -q -  $PSFILE
     

@@ -47,8 +47,10 @@ To compile pdftohtml.bin, type :
    
     make
 
-
-This version of Pdftohtml is tested on Linux, FreeBSD and Windows
+In order to use pdftohtml script you will need to edit it to match your
+installation path.
+This version of pdftohtml was tested on Linux, FreeBSD, Solaris, MacOS X 
+and Windows
 
 
 
