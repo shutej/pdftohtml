@@ -33,3 +33,5 @@ consistency
 * when -c -noframes -stdout output could probably go to stdout, but does not
 
 * in xml output give an options of preserving more information about fonts
+
+* a way to change the background color (cmd line option)

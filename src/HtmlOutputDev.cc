@@ -460,55 +460,59 @@ void HtmlPage::coalesce() {
 		  str1->xRight[str1->len] = str2->xMin;
 		  ++str1->len;
       }
-      if (addLineBreak) {
-	  str1->text[str1->len] = '\n';
-	  str1->htext->append("<br>");
-	  str1->xRight[str1->len] = str2->xMin;
-	  ++str1->len;
-	  str1->yMin = str2->yMin;
-	  str1->yMax = str2->yMax;
-	  str1->xMax = str2->xMax;
-	  int fontLineSize = hfont1->getLineSize();
-	  int curLineSize = (int)(vertSpace + space); 
-	  if( curLineSize != fontLineSize )
+      if (addLineBreak) 
 	  {
-	      HtmlFont *newfnt = new HtmlFont(*hfont1);
-	      newfnt->setLineSize(curLineSize);
-	      str1->fontpos = fonts->AddFont(*newfnt);
-	      delete newfnt;
-	      hfont1 = getFont(str1);
-	      // we have to reget hfont2 because it's location could have
-	      // changed on resize
-	      hfont2 = getFont(str2); 
-	  }
+		  str1->text[str1->len] = '\n';
+		  str1->htext->append("<br>");
+		  str1->xRight[str1->len] = str2->xMin;
+		  ++str1->len;
+		  str1->yMin = str2->yMin;
+		  str1->yMax = str2->yMax;
+		  str1->xMax = str2->xMax;
+		  int fontLineSize = hfont1->getLineSize();
+		  int curLineSize = (int)(vertSpace + space); 
+		  if( curLineSize != fontLineSize )
+		  {
+		      HtmlFont *newfnt = new HtmlFont(*hfont1);
+		      newfnt->setLineSize(curLineSize);
+		      str1->fontpos = fonts->AddFont(*newfnt);
+		      delete newfnt;
+		      hfont1 = getFont(str1);
+		      // we have to reget hfont2 because it's location could have
+		      // changed on resize
+		      hfont2 = getFont(str2); 
+		  }
       }
-      for (i = 0; i < str2->len; ++i) {
-	str1->text[str1->len] = str2->text[i];
-	str1->xRight[str1->len] = str2->xRight[i];
-	++str1->len;
+      for (i = 0; i < str2->len; ++i) 
+	  {
+		str1->text[str1->len] = str2->text[i];
+		str1->xRight[str1->len] = str2->xRight[i];
+		++str1->len;
       }
 
       /* fix <i> and <b> if str1 and str2 differ */
       if( hfont1->isBold() && !hfont2->isBold() )
-	str1->htext->append("</b>", 4);
+		str1->htext->append("</b>", 4);
       if( hfont1->isItalic() && !hfont2->isItalic() )
-	str1->htext->append("</i>", 4);
+		str1->htext->append("</i>", 4);
       if( !hfont1->isBold() && hfont2->isBold() )
-	str1->htext->append("<b>", 3);
+		str1->htext->append("<b>", 3);
       if( !hfont1->isItalic() && hfont2->isItalic() )
-	str1->htext->append("<i>", 3);
+		str1->htext->append("<i>", 3);
 
       /* now handle switch of links */
       HtmlLink *hlink1 = str1->getLink();
       HtmlLink *hlink2 = str2->getLink();
-      if( !hlink1 || !hlink2 || !hlink1->isEqualDest(*hlink2) ) {
-	if(hlink1 != NULL )
-	  str1->htext->append("</a>");
-	if(hlink2 != NULL ) {
-	  GString *ls = hlink2->getLinkStart();
-	  str1->htext->append(ls);
-	  delete ls;
-	}
+      if( !hlink1 || !hlink2 || !hlink1->isEqualDest(*hlink2) ) 
+	  {
+		if(hlink1 != NULL )
+	  	str1->htext->append("</a>");
+		if(hlink2 != NULL ) 
+		{
+			GString *ls = hlink2->getLinkStart();
+	  		str1->htext->append(ls);
+	  		delete ls;
+		}
       }
 
       str1->htext->append(str2->htext);
@@ -516,36 +520,39 @@ void HtmlPage::coalesce() {
       str1->link = str2->link; 
       hfont1 = hfont2;
       if (str2->xMax > str1->xMax) {
-	str1->xMax = str2->xMax;
+		str1->xMax = str2->xMax;
       }
       if (str2->yMax > str1->yMax) {
-	str1->yMax = str2->yMax;
+		str1->yMax = str2->yMax;
       }
       str1->yxNext = str2->yxNext;
       delete str2;
-    } else { // keep strings separate
+    } 
+	else 
+	{ // keep strings separate
 //      printf("no\n"); 
-      if( hfont1->isBold() )
-	str1->htext->append("</b>",4);
-      if( hfont1->isItalic() )
-	str1->htext->append("</i>",4);
-      if(str1->getLink() != NULL )
-	str1->htext->append("</a>");
+		if( hfont1->isBold() )
+			str1->htext->append("</b>",4);
+		if( hfont1->isItalic() )
+			str1->htext->append("</i>",4);
+		if(str1->getLink() != NULL )
+			str1->htext->append("</a>");
      
-      str1->xMin = curX; str1->yMin = curY; 
-      str1 = str2;
-      curX = str1->xMin; curY = str1->yMin;
-      hfont1 = hfont2;
-      if( hfont1->isBold() )
-	str1->htext->insert(0,"<b>",3);
-      if( hfont1->isItalic() )
-	str1->htext->insert(0,"<i>",3);
-      if( str1->getLink() != NULL ) {
-	GString *ls = str1->getLink()->getLinkStart();
-	str1->htext->insert(0, ls);
-	delete ls;
-      }
-    }
+		str1->xMin = curX; str1->yMin = curY; 
+		str1 = str2;
+		curX = str1->xMin; curY = str1->yMin;
+		hfont1 = hfont2;
+		if( hfont1->isBold() )
+			str1->htext->insert(0,"<b>",3);
+		if( hfont1->isItalic() )
+			str1->htext->insert(0,"<i>",3);
+      	if( str1->getLink() != NULL ) 
+		{
+			GString *ls = str1->getLink()->getLinkStart();
+			str1->htext->insert(0, ls);
+			delete ls;
+      	}
+	}
   }
   str1->xMin = curX; str1->yMin = curY;
   if( hfont1->isBold() )
@@ -585,7 +592,7 @@ void HtmlPage::dumpAsXML(FILE* f,int page){
       fprintf(f,"width=\"%d\" height=\"%d\" ",xoutRound(tmp->xMax-tmp->xMin),xoutRound(tmp->yMax-tmp->yMin));
       fprintf(f,"font=\"%d\">", tmp->fontpos);
       if (tmp->fontpos!=-1){
-	str1=fonts->getCSStyle(tmp->fontpos, str);
+		str1=fonts->getCSStyle(tmp->fontpos, str);
       }
       fputs(str1->getCString(),f);
       delete str;
@@ -696,11 +703,17 @@ void HtmlPage::dump(FILE *f, int pageNum)
 {
   if (complexMode)
   {
-    if (xml) dumpAsXML(f, pageNum);
-    if (!xml) dumpComplex(f, pageNum);  
+    if (xml) 
+	{
+		dumpAsXML(f, pageNum);
+	}
+	else
+	{
+		dumpComplex(f, pageNum);  
+	}
   }
   else
-  {
+  {	/* simple mode */
     fprintf(f,"<A name=%d></a>",pageNum);
     GString* fName=basename(DocName); 
     for (int i=1;i<HtmlOutputDev::imgNum;i++)
@@ -1280,6 +1293,43 @@ void HtmlOutputDev::drawLink(Link* link,Catalog *cat){
   delete _dest;
 }
 
+/*
+ * Allocate and return a link to a specified page
+ */
+GString* HtmlOutputDev::generateLinkToPage(int page)
+{
+	GString *link;
+	GString *str=GString::fromInt(page);
+    /* 					complex 	simple
+	 * 		frames		file-4.html	files.html#4
+	 * 		noframes	#4			#4
+	 */
+	if (noframes)
+	{
+		link = new GString("#");
+		link->append(str);
+	}
+	else
+	{
+		link = basename(Docname);
+		if( complexMode ) 
+		{
+	    	link->append("-");
+	    	link->append(str);
+			link->append(".html");
+		}
+		else
+		{
+			link->append("s.html#");
+			link->append(str);
+		}
+	}
+	delete str;
+
+	return link;
+}
+	
+
 GString* HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
   char *p;
   switch(link->getAction()->getKind()) 
@@ -1305,34 +1355,8 @@ GString* HtmlOutputDev::getLinkDest(Link *link,Catalog* catalog){
 
 	      delete dest;
 
-	      GString *str=GString::fromInt(page);
-	      /* 					complex 	simple
-		   * 		frames		file-4.html	files.html#4
-		   * 		noframes	file.html#4	file.html#4
-	       */
-	      if (noframes)
-	      {
-			file = new GString("#");
-			file->append(str);
-	      }
-	      else
-	      {
-			file = basename(Docname);
-			if( complexMode ) 
-			{
-		    	file->append("-");
-		    	file->append(str);
-				file->append(".html");
-			}
-			else
-			{
-				file->append("s.html#");
-				file->append(str);
-			}
-	      }
-
-	      if (printCommands) printf(" link to page %d ",page);
-	      delete str;
+	      file = generateLinkToPage(page);
+		  if (printCommands) printf(" link to page %d ",page);
 	      return file;
 	  }
 	  else 
@@ -1481,7 +1505,6 @@ GBool HtmlOutputDev::newOutlineLevel(FILE *output, Object *node, Catalog* catalo
       title.free();
 
       // get corresponding link
-      // Note: some code duplicated from HtmlOutputDev::getLinkDest().
       GString *linkName = NULL;;
       Object dest;
       if (!curr.dictLookup("Dest", &dest)->isNull()) {
@@ -1502,26 +1525,7 @@ GBool HtmlOutputDev::newOutlineLevel(FILE *output, Object *node, Catalog* catalo
 	  		}
 	  		delete linkdest;
 
-			/* 			complex 	simple
-			frames		file-4.html	files.html#4
-			noframes	file.html#4	file.html#4
-	   		*/
-	  		linkName=basename(Docname);
-	  		GString *str=GString::fromInt(page);
-	  		if (noframes) {
-	    		linkName->append(".html#");
-				linkName->append(str);
-	  		} else {
-    			if( complexMode ) {
-	   		   		linkName->append("-");
-	      			linkName->append(str);
-	      			linkName->append(".html");
-	    		} else {
-	      			linkName->append("s.html#");
-	      			linkName->append(str);
-	    		}
-	  		}
-			delete str;
+			linkName = generateLinkToPage(page);
 		}
       }
       dest.free();

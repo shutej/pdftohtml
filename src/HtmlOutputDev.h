@@ -266,6 +266,7 @@ private:
   // convert encoding into a HTML standard, or encoding->getCString if not
   // recognized
   static char* mapEncodingToHtml(GString* encoding);
+  GString* HtmlOutputDev::generateLinkToPage(int page);
   GString* getLinkDest(Link *link,Catalog *catalog);
   void dumpMetaVars(FILE *);
   void doFrame(int firstPage);

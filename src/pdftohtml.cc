@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
   // read config file
   globalParams = new GlobalParams("");
 
-  if (errQuiet) {
+  if (errQuiet || stout) {
     globalParams->setErrQuiet(errQuiet);
     printCommands = gFalse; // I'm not 100% what is the differecne between them
   }
