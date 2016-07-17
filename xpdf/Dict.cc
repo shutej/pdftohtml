@@ -41,9 +41,13 @@ Dict::~Dict() {
 }
 
 void Dict::add(char *key, Object *val) {
-  if (length + 1 > size) {
-    size += 8;
-    entries = (DictEntry *)grealloc(entries, size * sizeof(DictEntry));
+  if (length == size) {
+    if (length == 0) {
+      size = 8;
+    } else {
+      size *= 2;
+    }
+    entries = (DictEntry *)greallocn(entries, size, sizeof(DictEntry));
   }
   entries[length].key = key;
   entries[length].val = *val;

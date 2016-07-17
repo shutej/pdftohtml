@@ -82,8 +82,23 @@ pdftohtml 0.36
 -fixed bug which caused bold to spread from one sentence to the entire document
 -support for document outlines (patch by Nicolas Pitre)
 
-pdftohtml 0.36a beta
+pdftohtml 0.37
 =====================
--workaround for broken compilation on MacOS X
--fixed a bug for outline when a different output dir is specified (thanks to Steffan A. Cline)
--meaningful return values, documented
+-updated Xpdf to 2.03 (javelinv@users.sourceforge.net)
+
+pdftohtml 0.38
+=====================
+-updated Xpdf to 3.00 (javelinv@users.sourceforge.net)
+-CAN-2005-3193 (security fix)
+
+pdftohtml 0.39
+=====================
+-removed files that were not needed from project directorys and makefiles. 
+Should correct most of the build problems people have been haveing.
+-reenable hyperlinks in ouputed html pages.
+
+pdftohtml 0.40
+=====================
+-updated Xpdf to 3.01p2
+-improved the output of complex mode documents
+-fixed links, Thay should not include text that should not be part of the link anymore.

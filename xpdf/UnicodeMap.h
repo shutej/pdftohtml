@@ -20,6 +20,10 @@
 #include "gtypes.h"
 #include "CharTypes.h"
 
+#if MULTITHREADED
+#include "GMutex.h"
+#endif
+
 class GString;
 
 //------------------------------------------------------------------------
@@ -102,6 +106,9 @@ private:
   UnicodeMapExt *eMaps;		// (user)
   int eMapsLen;			// (user)
   int refCnt;
+#if MULTITHREADED
+  GMutex mutex;
+#endif
 };
 
 //------------------------------------------------------------------------

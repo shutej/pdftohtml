@@ -58,6 +58,13 @@ Object *Object::initDict(XRef *xref) {
   return this;
 }
 
+Object *Object::initDict(Dict *dictA) {
+  initObj(objDict);
+  dict = dictA;
+  dict->incRef();
+  return this;
+}
+
 Object *Object::initStream(Stream *streamA) {
   initObj(objStream);
   stream = streamA;
@@ -154,7 +161,7 @@ void Object::print(FILE *f) {
     break;
   case objString:
     fprintf(f, "(");
-    fwrite(string->getCString(), 1, string->getLength(), stdout);
+    fwrite(string->getCString(), 1, string->getLength(), f);
     fprintf(f, ")");
     break;
   case objName:

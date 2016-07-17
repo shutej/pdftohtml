@@ -10,9 +10,7 @@
 #ifndef HTMLOUTPUTDEV_H
 #define HTMLOUTPUTDEV_H
 
-#include <aconf.h>
-
-#ifdef USE_GCC_PRAGMAS
+#ifdef __GNUC__
 #pragma interface
 #endif
 
@@ -35,6 +33,7 @@
 #endif
 
 #define xoutRound(x) ((int)(x + 0.5))
+#define xoutRoundLower(x) ((int)(x - 0.5))
 
 #define DOCTYPE "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
 #define DOCTYPE_FRAMES "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\"\n\"http://www.w3.org/TR/html4/frameset.dtd\">"
@@ -51,7 +50,7 @@ class HtmlString {
 public:
 
   // Constructor.
-  HtmlString(GfxState *state, double fontSize, HtmlFontAccu* fonts);
+  HtmlString(GfxState *state, double fontSize, double charspace, HtmlFontAccu* fonts);
 
   // Destructor.
   ~HtmlString();
@@ -75,6 +74,8 @@ private:
   HtmlString *xyNext;		// next string in x-major order
   int fontpos;
   GString* htext;
+  GString* htext2;
+  int strSize;
   int len;			// length of text and xRight
   int size;			// size of text and xRight arrays
   UnicodeTextDirection dir;	// direction (left to right/right to left)
@@ -109,6 +110,7 @@ public:
 		Unicode *u, int uLen); //Guchar c);
 
   void updateFont(GfxState *state);
+  void updateCharSpace(GfxState *state);
 
   // End the current string, sorting it into the list of strings.
   void endString();
@@ -139,7 +141,7 @@ private:
 
   double fontSize;		// current font size
   GBool rawOrder;		// keep strings in content stream order
-
+  double charspace;
   HtmlString *curStr;		// currently active string
 
   HtmlString *yxStrings;	// strings in y-major order
@@ -236,6 +238,7 @@ public:
 
   //----- update text state
   virtual void updateFont(GfxState *state);
+  virtual void updateCharSpace(GfxState *state);
 
   //----- text drawing
   virtual void beginString(GfxState *state, GString *s);
@@ -243,7 +246,7 @@ public:
   virtual void drawChar(GfxState *state, double x, double y,
 			double dx, double dy,
 			double originX, double originY,
-			CharCode code, Unicode *u, int uLen);
+			CharCode code,int nBytes, Unicode *u, int uLen);
   
   virtual void drawImageMask(GfxState *state, Object *ref, 
 			     Stream *str,
@@ -266,7 +269,6 @@ private:
   // convert encoding into a HTML standard, or encoding->getCString if not
   // recognized
   static char* mapEncodingToHtml(GString* encoding);
-  GString* HtmlOutputDev::generateLinkToPage(int page);
   GString* getLinkDest(Link *link,Catalog *catalog);
   void dumpMetaVars(FILE *);
   void doFrame(int firstPage);

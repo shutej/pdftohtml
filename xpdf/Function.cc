@@ -185,7 +185,7 @@ void IdentityFunction::transform(double *in, double *out) {
 
 SampledFunction::SampledFunction(Object *funcObj, Dict *dict) {
   Stream *str;
-  int nSamples, sampleBits;
+  int sampleBits;
   double sampleMul;
   Object obj1, obj2;
   Guint buf, bitMask;
@@ -228,6 +228,10 @@ SampledFunction::SampledFunction(Object *funcObj, Dict *dict) {
     obj2.free();
   }
   obj1.free();
+  idxMul[0] = n;
+  for (i = 1; i < m; ++i) {
+    idxMul[i] = idxMul[i-1] * sampleSize[i-1];
+  }
 
   //----- BitsPerSample
   if (!dict->lookup("BitsPerSample", &obj1)->isInt()) {
@@ -264,6 +268,10 @@ SampledFunction::SampledFunction(Object *funcObj, Dict *dict) {
     }
   }
   obj1.free();
+  for (i = 0; i < m; ++i) {
+    inputMul[i] = (encode[i][1] - encode[i][0]) /
+                  (domain[i][1] - domain[i][0]);
+  }
 
   //----- Decode
   if (dict->lookup("Decode", &obj1)->isArray() &&
@@ -296,7 +304,7 @@ SampledFunction::SampledFunction(Object *funcObj, Dict *dict) {
   nSamples = n;
   for (i = 0; i < m; ++i)
     nSamples *= sampleSize[i];
-  samples = (double *)gmalloc(nSamples * sizeof(double));
+  samples = (double *)gmallocn(nSamples, sizeof(double));
   buf = 0;
   bits = 0;
   bitMask = (1 << sampleBits) - 1;
@@ -342,37 +350,34 @@ SampledFunction::~SampledFunction() {
 }
 
 SampledFunction::SampledFunction(SampledFunction *func) {
-  int nSamples, i;
-
   memcpy(this, func, sizeof(SampledFunction));
-
-  nSamples = n;
-  for (i = 0; i < m; ++i) {
-    nSamples *= sampleSize[i];
-  }
-  samples = (double *)gmalloc(nSamples * sizeof(double));
+  samples = (double *)gmallocn(nSamples, sizeof(double));
   memcpy(samples, func->samples, nSamples * sizeof(double));
 }
 
 void SampledFunction::transform(double *in, double *out) {
   double x;
-  int e[2][funcMaxInputs];
-  double efrac[funcMaxInputs];
-  double s0[1 << funcMaxInputs], s1[1 << funcMaxInputs];
-  int i, j, k, idx;
+  int e[funcMaxInputs][2];
+  double efrac0[funcMaxInputs];
+  double efrac1[funcMaxInputs];
+  double s[1 << funcMaxInputs];
+  int i, j, k, idx, t;
 
   // map input values into sample array
   for (i = 0; i < m; ++i) {
-    x = ((in[i] - domain[i][0]) / (domain[i][1] - domain[i][0])) *
-        (encode[i][1] - encode[i][0]) + encode[i][0];
+    x = (in[i] - domain[i][0]) * inputMul[i] + encode[i][0];
     if (x < 0) {
       x = 0;
     } else if (x > sampleSize[i] - 1) {
       x = sampleSize[i] - 1;
     }
-    e[0][i] = (int)floor(x);
-    e[1][i] = (int)ceil(x);
-    efrac[i] = x - e[0][i];
+    e[i][0] = (int)x;
+    if ((e[i][1] = e[i][0] + 1) >= sampleSize[i]) {
+      // this happens if in[i] = domain[i][1]
+      e[i][1] = e[i][0];
+    }
+    efrac1[i] = x - e[i][0];
+    efrac0[i] = 1 - efrac1[i];
   }
 
   // for each output, do m-linear interpolation
@@ -380,24 +385,22 @@ void SampledFunction::transform(double *in, double *out) {
 
     // pull 2^m values out of the sample array
     for (j = 0; j < (1<<m); ++j) {
-      idx = e[j & 1][m - 1];
-      for (k = m - 2; k >= 0; --k) {
-	idx = idx * sampleSize[k] + e[(j >> k) & 1][k];
+      idx = i;
+      for (k = 0, t = j; k < m; ++k, t >>= 1) {
+	idx += idxMul[k] * (e[k][t & 1]);
       }
-      idx = idx * n + i;
-      s0[j] = samples[idx];
+      s[j] = samples[idx];
     }
 
     // do m sets of interpolations
-    for (j = 0; j < m; ++j) {
-      for (k = 0; k < (1 << (m - j)); k += 2) {
-	s1[k >> 1] = (1 - efrac[j]) * s0[k] + efrac[j] * s0[k+1];
+    for (j = 0, t = (1<<m); j < m; ++j, t >>= 1) {
+      for (k = 0; k < t; k += 2) {
+	s[k >> 1] = efrac0[j] * s[k] + efrac1[j] * s[k+1];
       }
-      memcpy(s0, s1, (1 << (m - j - 1)) * sizeof(double));
     }
 
     // map output value to range
-    out[i] = s0[0] * (decode[i][1] - decode[i][0]) + decode[i][0];
+    out[i] = s[0] * (decode[i][1] - decode[i][0]) + decode[i][0];
     if (out[i] < range[i][0]) {
       out[i] = range[i][0];
     } else if (out[i] > range[i][1]) {
@@ -553,9 +556,9 @@ StitchingFunction::StitchingFunction(Object *funcObj, Dict *dict) {
     goto err1;
   }
   k = obj1.arrayGetLength();
-  funcs = (Function **)gmalloc(k * sizeof(Function *));
-  bounds = (double *)gmalloc((k + 1) * sizeof(double));
-  encode = (double *)gmalloc(2 * k * sizeof(double));
+  funcs = (Function **)gmallocn(k, sizeof(Function *));
+  bounds = (double *)gmallocn(k + 1, sizeof(double));
+  encode = (double *)gmallocn(2 * k, sizeof(double));
   for (i = 0; i < k; ++i) {
     funcs[i] = NULL;
   }
@@ -616,12 +619,16 @@ StitchingFunction::StitchingFunction(Object *funcObj, Dict *dict) {
 }
 
 StitchingFunction::StitchingFunction(StitchingFunction *func) {
+  int i;
+
   k = func->k;
-  funcs = (Function **)gmalloc(k * sizeof(Function *));
-  memcpy(funcs, func->funcs, k * sizeof(Function *));
-  bounds = (double *)gmalloc((k + 1) * sizeof(double));
+  funcs = (Function **)gmallocn(k, sizeof(Function *));
+  for (i = 0; i < k; ++i) {
+    funcs[i] = func->funcs[i]->copy();
+  }
+  bounds = (double *)gmallocn(k + 1, sizeof(double));
   memcpy(bounds, func->bounds, (k + 1) * sizeof(double));
-  encode = (double *)gmalloc(2 * k * sizeof(double));
+  encode = (double *)gmallocn(2 * k, sizeof(double));
   memcpy(encode, func->encode, 2 * k * sizeof(double));
   ok = gTrue;
 }
@@ -629,9 +636,11 @@ StitchingFunction::StitchingFunction(StitchingFunction *func) {
 StitchingFunction::~StitchingFunction() {
   int i;
 
-  for (i = 0; i < k; ++i) {
-    if (funcs[i]) {
-      delete funcs[i];
+  if (funcs) {
+    for (i = 0; i < k; ++i) {
+      if (funcs[i]) {
+	delete funcs[i];
+      }
     }
   }
   gfree(funcs);
@@ -910,10 +919,14 @@ double PSStack::popNum() {
 void PSStack::copy(int n) {
   int i;
 
+  if (sp + n > psStackSize) {
+    error(-1, "Stack underflow in PostScript function");
+    return;
+  }
   if (!checkOverflow(n)) {
     return;
   }
-  for (i = sp + n - 1; i <= sp; ++i) {
+  for (i = sp + n - 1; i >= sp; --i) {
     stack[i - n] = stack[i];
   }
   sp -= n;
@@ -984,6 +997,7 @@ PostScriptFunction::PostScriptFunction(Object *funcObj, Dict *dict) {
   str = funcObj->getStream();
 
   //----- parse the function
+  codeString = new GString();
   str->reset();
   if (!(tok = getToken(str)) || tok->cmp("{")) {
     error(-1, "Expected '{' at start of PostScript function");
@@ -1009,12 +1023,14 @@ PostScriptFunction::PostScriptFunction(Object *funcObj, Dict *dict) {
 
 PostScriptFunction::PostScriptFunction(PostScriptFunction *func) {
   memcpy(this, func, sizeof(PostScriptFunction));
-  code = (PSObject *)gmalloc(codeSize * sizeof(PSObject));
+  code = (PSObject *)gmallocn(codeSize, sizeof(PSObject));
   memcpy(code, func->code, codeSize * sizeof(PSObject));
+  codeString = func->codeString->copy();
 }
 
 PostScriptFunction::~PostScriptFunction() {
   gfree(code);
+  delete codeString;
 }
 
 void PostScriptFunction::transform(double *in, double *out) {
@@ -1168,6 +1184,9 @@ GString *PostScriptFunction::getToken(Stream *str) {
   s = new GString();
   do {
     c = str->getChar();
+    if (c != EOF) {
+      codeString->append(c);
+    }
   } while (c != EOF && isspace(c));
   if (c == '{' || c == '}') {
     s->append((char)c);
@@ -1179,6 +1198,7 @@ GString *PostScriptFunction::getToken(Stream *str) {
 	break;
       }
       str->getChar();
+      codeString->append(c);
     }
   } else {
     while (1) {
@@ -1188,6 +1208,7 @@ GString *PostScriptFunction::getToken(Stream *str) {
 	break;
       }
       str->getChar();
+      codeString->append(c);
     }
   }
   return s;
@@ -1196,7 +1217,7 @@ GString *PostScriptFunction::getToken(Stream *str) {
 void PostScriptFunction::resizeCode(int newSize) {
   if (newSize >= codeSize) {
     codeSize += 64;
-    code = (PSObject *)grealloc(code, codeSize * sizeof(PSObject));
+    code = (PSObject *)greallocn(code, codeSize, sizeof(PSObject));
   }
 }
 
@@ -1241,7 +1262,7 @@ void PostScriptFunction::exec(PSStack *stack, int codePtr) {
 	} else {
 	  b2 = stack->popBool();
 	  b1 = stack->popBool();
-	  stack->pushReal(b1 && b2);
+	  stack->pushBool(b1 && b2);
 	}
 	break;
       case psOpAtan:
@@ -1308,8 +1329,8 @@ void PostScriptFunction::exec(PSStack *stack, int codePtr) {
 	stack->roll(2, 1);
 	break;
       case psOpExp:
-	r2 = stack->popInt();
-	r1 = stack->popInt();
+	r2 = stack->popNum();
+	r1 = stack->popNum();
 	stack->pushReal(pow(r1, r2));
 	break;
       case psOpFalse:
@@ -1421,7 +1442,7 @@ void PostScriptFunction::exec(PSStack *stack, int codePtr) {
 	if (stack->topIsInt()) {
 	  stack->pushInt(~stack->popInt());
 	} else {
-	  stack->pushReal(!stack->popBool());
+	  stack->pushBool(!stack->popBool());
 	}
 	break;
       case psOpOr:
@@ -1432,7 +1453,7 @@ void PostScriptFunction::exec(PSStack *stack, int codePtr) {
 	} else {
 	  b2 = stack->popBool();
 	  b1 = stack->popBool();
-	  stack->pushReal(b1 || b2);
+	  stack->pushBool(b1 || b2);
 	}
 	break;
       case psOpPop:
@@ -1450,7 +1471,7 @@ void PostScriptFunction::exec(PSStack *stack, int codePtr) {
 	}
 	break;
       case psOpSin:
-	stack->pushReal(cos(stack->popNum()));
+	stack->pushReal(sin(stack->popNum()));
 	break;
       case psOpSqrt:
 	stack->pushReal(sqrt(stack->popNum()));
@@ -1483,7 +1504,7 @@ void PostScriptFunction::exec(PSStack *stack, int codePtr) {
 	} else {
 	  b2 = stack->popBool();
 	  b1 = stack->popBool();
-	  stack->pushReal(b1 ^ b2);
+	  stack->pushBool(b1 ^ b2);
 	}
 	break;
       case psOpIf:

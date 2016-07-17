@@ -117,19 +117,73 @@ GString *LinkAction::getFileSpecName(Object *fileSpecObj) {
 
   // dictionary
   } else if (fileSpecObj->isDict()) {
+#ifdef WIN32
+    if (!fileSpecObj->dictLookup("DOS", &obj1)->isString()) {
+#else
     if (!fileSpecObj->dictLookup("Unix", &obj1)->isString()) {
+#endif
       obj1.free();
       fileSpecObj->dictLookup("F", &obj1);
     }
-    if (obj1.isString())
+    if (obj1.isString()) {
       name = obj1.getString()->copy();
-    else
+    } else {
       error(-1, "Illegal file spec in link");
+    }
     obj1.free();
 
   // error
   } else {
     error(-1, "Illegal file spec in link");
+  }
+
+  // system-dependent path manipulation
+  if (name) {
+#ifdef WIN32
+    int i, j;
+
+    // "//...."             --> "\...."
+    // "/x/...."            --> "x:\...."
+    // "/server/share/...." --> "\\server\share\...."
+    // convert escaped slashes to slashes and unescaped slashes to backslashes
+    i = 0;
+    if (name->getChar(0) == '/') {
+      if (name->getLength() >= 2 && name->getChar(1) == '/') {
+	name->del(0);
+	i = 0;
+      } else if (name->getLength() >= 2 &&
+		 ((name->getChar(1) >= 'a' && name->getChar(1) <= 'z') ||
+		  (name->getChar(1) >= 'A' && name->getChar(1) <= 'Z')) &&
+		 (name->getLength() == 2 || name->getChar(2) == '/')) {
+	name->setChar(0, name->getChar(1));
+	name->setChar(1, ':');
+	i = 2;
+      } else {
+	for (j = 2; j < name->getLength(); ++j) {
+	  if (name->getChar(j-1) != '\\' &&
+	      name->getChar(j) == '/') {
+	    break;
+	  }
+	}
+	if (j < name->getLength()) {
+	  name->setChar(0, '\\');
+	  name->insert(0, '\\');
+	  i = 2;
+	}
+      }
+    }
+    for (; i < name->getLength(); ++i) {
+      if (name->getChar(i) == '/') {
+	name->setChar(i, '\\');
+      } else if (name->getChar(i) == '\\' &&
+		 i+1 < name->getLength() &&
+		 name->getChar(i+1) == '/') {
+	name->del(i);
+      }
+    }
+#else
+    // no manipulation needed for Unix
+#endif
   }
 
   return name;
@@ -497,7 +551,7 @@ LinkURI::LinkURI(Object *uriObj, GString *baseURI) {
   uri = NULL;
   if (uriObj->isString()) {
     uri2 = uriObj->getString()->copy();
-    if (baseURI) {
+    if (baseURI && baseURI->getLength() > 0) {
       n = strcspn(uri2->getCString(), "/:");
       if (n == uri2->getLength() || uri2->getChar(n) == '/') {
 	uri = baseURI->copy();
@@ -581,13 +635,42 @@ LinkUnknown::~LinkUnknown() {
 }
 
 //------------------------------------------------------------------------
+// LinkBorderStyle
+//------------------------------------------------------------------------
+
+LinkBorderStyle::LinkBorderStyle(LinkBorderType typeA, double widthA,
+				 double *dashA, int dashLengthA,
+				 double rA, double gA, double bA) {
+  type = typeA;
+  width = widthA;
+  dash = dashA;
+  dashLength = dashLengthA;
+  r = rA;
+  g = gA;
+  b = bA;
+}
+
+LinkBorderStyle::~LinkBorderStyle() {
+  if (dash) {
+    gfree(dash);
+  }
+}
+
+//------------------------------------------------------------------------
 // Link
 //------------------------------------------------------------------------
 
 Link::Link(Dict *dict, GString *baseURI) {
-  Object obj1, obj2;
+  Object obj1, obj2, obj3;
+  LinkBorderType borderType;
+  double borderWidth;
+  double *borderDash;
+  int borderDashLength;
+  double borderR, borderG, borderB;
   double t;
+  int i;
 
+  borderStyle = NULL;
   action = NULL;
   ok = gFalse;
 
@@ -632,20 +715,98 @@ Link::Link(Dict *dict, GString *baseURI) {
     y2 = t;
   }
 
-  // get border
-  borderW = 1;
-  if (!dict->lookup("Border", &obj1)->isNull()) {
-    if (obj1.isArray() && obj1.arrayGetLength() >= 3) {
-      if (obj1.arrayGet(2, &obj2)->isNum()) {
-	borderW = obj2.getNum();
-      } else {
-	error(-1, "Bad annotation border");
+  // get the border style info
+  borderType = linkBorderSolid;
+  borderWidth = 1;
+  borderDash = NULL;
+  borderDashLength = 0;
+  borderR = 0;
+  borderG = 0;
+  borderB = 1;
+  if (dict->lookup("BS", &obj1)->isDict()) {
+    if (obj1.dictLookup("S", &obj2)->isName()) {
+      if (obj2.isName("S")) {
+	borderType = linkBorderSolid;
+      } else if (obj2.isName("D")) {
+	borderType = linkBorderDashed;
+      } else if (obj2.isName("B")) {
+	borderType = linkBorderEmbossed;
+      } else if (obj2.isName("I")) {
+	borderType = linkBorderEngraved;
+      } else if (obj2.isName("U")) {
+	borderType = linkBorderUnderlined;
       }
-      obj2.free();
+    }
+    obj2.free();
+    if (obj1.dictLookup("W", &obj2)->isNum()) {
+      borderWidth = obj2.getNum();
+    }
+    obj2.free();
+    if (obj1.dictLookup("D", &obj2)->isArray()) {
+      borderDashLength = obj2.arrayGetLength();
+      borderDash = (double *)gmallocn(borderDashLength, sizeof(double));
+      for (i = 0; i < borderDashLength; ++i) {
+	if (obj2.arrayGet(i, &obj3)->isNum()) {
+	  borderDash[i] = obj3.getNum();
+	} else {
+	  borderDash[i] = 1;
+	}
+	obj3.free();
+      }
+    }
+    obj2.free();
+  } else {
+    obj1.free();
+    if (dict->lookup("Border", &obj1)->isArray()) {
+      if (obj1.arrayGetLength() >= 3) {
+	if (obj1.arrayGet(2, &obj2)->isNum()) {
+	  borderWidth = obj2.getNum();
+	}
+	obj2.free();
+	if (obj1.arrayGetLength() >= 4) {
+	  if (obj1.arrayGet(3, &obj2)->isArray()) {
+	    borderType = linkBorderDashed;
+	    borderDashLength = obj2.arrayGetLength();
+	    borderDash = (double *)gmallocn(borderDashLength, sizeof(double));
+	    for (i = 0; i < borderDashLength; ++i) {
+	      if (obj2.arrayGet(i, &obj3)->isNum()) {
+		borderDash[i] = obj3.getNum();
+	      } else {
+		borderDash[i] = 1;
+	      }
+	      obj3.free();
+	    }
+	  } else {
+	    // Adobe draws no border at all if the last element is of
+	    // the wrong type.
+	    borderWidth = 0;
+	  }
+	  obj2.free();
+	}
+      }
     }
   }
   obj1.free();
-
+  if (dict->lookup("C", &obj1)->isArray() && obj1.arrayGetLength() == 3) {
+    if (obj1.arrayGet(0, &obj2)->isNum()) {
+      borderR = obj2.getNum();
+    }
+    obj1.free();
+    if (obj1.arrayGet(1, &obj2)->isNum()) {
+      borderG = obj2.getNum();
+    }
+    obj1.free();
+    if (obj1.arrayGet(2, &obj2)->isNum()) {
+      borderB = obj2.getNum();
+    }
+    obj1.free();
+  }
+  obj1.free();
+  /*
+  borderStyle = new LinkBorderStyle(borderType, borderWidth,
+				    borderDash, borderDashLength,
+				    borderR, borderG, borderB);
+*/
   // look for destination
   if (!dict->lookup("Dest", &obj1)->isNull()) {
     action = LinkAction::parseDest(&obj1);
@@ -673,8 +834,12 @@ Link::Link(Dict *dict, GString *baseURI) {
 }
 
 Link::~Link() {
-  if (action)
+  if (borderStyle) {
+    delete borderStyle;
+  }
+  if (action) {
     delete action;
+  }
 }
 
 //------------------------------------------------------------------------
@@ -699,7 +864,7 @@ Links::Links(Object *annots, GString *baseURI) {
 	  if (link->isOk()) {
 	    if (numLinks >= size) {
 	      size += 16;
-	      links = (Link **)grealloc(links, size * sizeof(Link *));
+	      links = (Link **)greallocn(links, size, sizeof(Link *));
 	    }
 	    links[numLinks++] = link;
 	  } else {

@@ -46,7 +46,7 @@ GBool xml=gFalse;
 GBool errQuiet=gFalse;
 
 GBool showHidden = gFalse;
-GBool noMerge = gFalse;
+GBool noMerge = gTrue;
 static char ownerPassword[33] = "";
 static char userPassword[33] = "";
 static char gsDevice[33] = "png16m";
@@ -86,8 +86,8 @@ static ArgDesc argDesc[] = {
    "output for XML post-processing"},
   {"-hidden", argFlag,   &showHidden,   0,
    "output hidden text"},
-  {"-nomerge", argFlag, &noMerge, 0,
-   "do not merge paragraphs"},   
+/*  {"-nomerge", argFlag, &noMerge, 0,
+   "do not merge paragraphs"}, */  
   {"-enc",    argString,   textEncName,    sizeof(textEncName),
    "output text encoding name"},
   {"-dev",    argString,   gsDevice,       sizeof(gsDevice),
@@ -116,12 +116,11 @@ int main(int argc, char *argv[]) {
   GString *ownerPW, *userPW;
   Object info;
   char * extsList[] = {"png", "jpeg", "bmp", "pcx", "tiff", "pbm", NULL};
-  int result = 0;
-  
+
   // parse args
   ok = parseArgs(argDesc, &argc, argv);
-  if (!ok || argc < 2 || printHelp || printVersion) {
-    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.36a beta", xpdfVersion);
+  if (!ok || argc < 2 || argc > 3 || printHelp || printVersion) {
+    fprintf(stderr, "pdftohtml version %s http://pdftohtml.sourceforge.net/, based on Xpdf version %s\n", "0.40", xpdfVersion);
     fprintf(stderr, "%s\n", "Copyright 1999-2003 Gueorgui Ovtcharov and Rainer Dorsch");
     fprintf(stderr, "%s\n\n", xpdfCopyright);
     if (!printVersion) {
@@ -136,7 +135,7 @@ int main(int argc, char *argv[]) {
   // read config file
   globalParams = new GlobalParams("");
 
-  if (errQuiet || stout) {
+  if (errQuiet) {
     globalParams->setErrQuiet(errQuiet);
     printCommands = gFalse; // I'm not 100% what is the differecne between them
   }
@@ -144,8 +143,7 @@ int main(int argc, char *argv[]) {
   if (textEncName[0]) {
     globalParams->setTextEncoding(textEncName);
     if( !globalParams->getTextEncoding() )  {
-		result = 2;
-		goto error;    
+	goto error;    
     }
   }
 
@@ -161,10 +159,9 @@ int main(int argc, char *argv[]) {
     userPW = NULL;
   }
 
-
   fileName = new GString(argv[1]);
-  doc = new PDFDoc(fileName, ownerPW, userPW);
 
+  doc = new PDFDoc(fileName, ownerPW, userPW);
   if (userPW) {
     delete userPW;
   }
@@ -172,15 +169,13 @@ int main(int argc, char *argv[]) {
     delete ownerPW;
   }
   if (!doc->isOk()) {
-	result = 4;
-  	goto error;
+    goto error;
   }
 
   // check for copy permission
   if (!doc->okToCopy()) {
     error(-1, "Copying of text from this document is not allowed.");
-	result = 3;
-	goto error;
+    goto error;
   }
 
   // construct text file name
@@ -292,8 +287,10 @@ int main(int argc, char *argv[]) {
 
   if (htmlOut->isOk())
   {
-	doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), 0, gTrue);
-  	if (!xml)
+//	doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), static_cast<int>(72*scale), 0, gTrue, gTrue);
+	doc->displayPages(htmlOut, firstPage, lastPage, static_cast<int>(72*scale), static_cast<int>(72*scale), 0, gTrue, gTrue,gTrue,NULL);
+  	
+	if (!xml)
 	{
 		htmlOut->dumpDocOutline(doc->getCatalog());
 	}
@@ -313,8 +310,8 @@ int main(int argc, char *argv[]) {
     globalParams->setPSNoText(gTrue);
     psOut = new PSOutputDev(psFileName->getCString(), doc->getXRef(),
 			    doc->getCatalog(), firstPage, lastPage, psModePS);
-    doc->displayPages(psOut, firstPage, lastPage, 
-	    static_cast<int>(72*scale), 0, gFalse);
+   // doc->displayPages(psOut, firstPage, lastPage, static_cast<int>(72*scale), static_cast<int>(72*scale), 0, gTrue, gTrue);
+	doc->displayPages(psOut, firstPage, lastPage, static_cast<int>(72*scale), static_cast<int>(72*scale), 0, gTrue, gTrue,gTrue,NULL);
     delete psOut;
 
     /*sprintf(buf, "%s -sDEVICE=png16m -dBATCH -dNOPROMPT -dNOPAUSE -r72 -sOutputFile=%s%%03d.png -g%dx%d -q %s", GHOSTSCRIPT, htmlFileName->getCString(), w, h,
@@ -367,7 +364,7 @@ int main(int argc, char *argv[]) {
   Object::memCheck(stderr);
   gMemReport(stderr);
 
-  return result;
+  return 0;
 }
 
 static GString* getInfoString(Dict *infoDict, char *key) {

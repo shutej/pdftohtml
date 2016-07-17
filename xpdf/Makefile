@@ -13,8 +13,12 @@ srcdir = .
 
 GOOSRCDIR = $(srcdir)/../goo
 GOOLIBDIR = ../goo
+FOFISRCDIR = $(srcdir)/../fofi
+FOFILIBDIR = ../fofi
+SPLASHSRCDIR = $(srcdir)/../splash
+SPLASHLIBDIR = ../splash
 
-CXXFLAGS += $(DEBUG) -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(srcdir) 
+CXXFLAGS +=  -g -O2 -DHAVE_CONFIG_H -I.. -I$(GOOSRCDIR) -I$(FOFISRCDIR) -I$(SPLASHSRCDIR) -I$(srcdir)           -I/usr/X11R6/include
 
 CC ?= cc
 CXX ?= c++
@@ -32,7 +36,7 @@ LIBPREFIX = lib
 
 #------------------------------------------------------------------------
 
-CXX_SRC = \
+CXX_SRC = $(srcdir)/Annot.cc \
 	$(srcdir)/Array.cc \
 	$(srcdir)/BuiltinFont.cc \
 	$(srcdir)/BuiltinFontTables.cc \
@@ -43,47 +47,42 @@ CXX_SRC = \
 	$(srcdir)/Dict.cc \
 	$(srcdir)/Error.cc \
 	$(srcdir)/FontEncodingTables.cc \
-	$(srcdir)/FontFile.cc \
 	$(srcdir)/Function.cc \
 	$(srcdir)/Gfx.cc \
 	$(srcdir)/GfxFont.cc \
 	$(srcdir)/GfxState.cc \
 	$(srcdir)/GlobalParams.cc \
-	$(srcdir)/ImageOutputDev.cc \
+	$(srcdir)/JArithmeticDecoder.cc \
 	$(srcdir)/JBIG2Stream.cc \
+	$(srcdir)/JPXStream.cc \
 	$(srcdir)/Lexer.cc \
 	$(srcdir)/Link.cc \
 	$(srcdir)/NameToCharCode.cc \
 	$(srcdir)/Object.cc \
 	$(srcdir)/Outline.cc \
 	$(srcdir)/OutputDev.cc \
-	$(srcdir)/PBMOutputDev.cc \
 	$(srcdir)/PDFDoc.cc \
 	$(srcdir)/PDFDocEncoding.cc \
 	$(srcdir)/PSOutputDev.cc \
+	$(srcdir)/PSTokenizer.cc \
 	$(srcdir)/Page.cc \
 	$(srcdir)/Parser.cc \
-	$(srcdir)/SFont.cc \
 	$(srcdir)/Stream.cc \
-	$(srcdir)/T1Font.cc \
-	$(srcdir)/TTFont.cc \
-	$(srcdir)/TextOutputDev.cc \
 	$(srcdir)/UnicodeMap.cc \
-	$(srcdir)/XOutputDev.cc \
-	$(srcdir)/Annot.cc \
-        $(srcdir)/PSTokenizer.cc \
-	$(srcdir)/XRef.cc
+	$(srcdir)/SecurityHandler.cc \
+	$(srcdir)/UnicodeTypeTable.cc \
+	$(srcdir)/XRef.cc 
 
 #------------------------------------------------------------------------
 
-XPDF_OBJS = Array.o BuiltinFont.o BuiltinFontTables.o Catalog.o \
+XPDF_OBJS = Annot.o Array.o BuiltinFont.o BuiltinFontTables.o Catalog.o \
 	CharCodeToUnicode.o CMap.o Decrypt.o Dict.o Error.o \
-	FontEncodingTables.o FontFile.o Function.o Gfx.o \
-	GfxFont.o GfxState.o GlobalParams.o Lexer.o Link.o \
-	NameToCharCode.o Object.o Outline.o OutputDev.o Page.o Parser.o \
-	PDFDoc.o PDFDocEncoding.o JBIG2Stream.o \
-	PSOutputDev.o Stream.o UnicodeMap.o XRef.o PSTokenizer.o Annot.o 
-
+	FontEncodingTables.o Function.o Gfx.o GfxFont.o \
+	GfxState.o GlobalParams.o JArithmeticDecoder.o JBIG2Stream.o \
+	JPXStream.o Lexer.o Link.o NameToCharCode.o Object.o Outline.o \
+	OutputDev.o Page.o Parser.o PDFDoc.o PDFDocEncoding.o PSOutputDev.o \
+	PSTokenizer.o Stream.o UnicodeMap.o SecurityHandler.o UnicodeTypeTable.o \
+	XRef.o 
 $(LIBPREFIX)Xpdf.a: $(XPDF_OBJS)
 	rm -f $(LIBPREFIX)Xpdf.a
 	$(AR) $(LIBPREFIX)Xpdf.a $(XPDF_OBJS)

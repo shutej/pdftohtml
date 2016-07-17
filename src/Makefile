@@ -1,16 +1,17 @@
 
-
 SHELL = /bin/sh
 
 SRCDIR = .
 XPDFSRCDIR = ../xpdf
 XPDFLIBDIR = ../xpdf
-
 GOOSRCDIR = ../goo
 GOOLIBDIR = ../goo
+FOFISRCDIR = ../fofi
+FOFILIBDIR = ../fofi
+SPLASHSRCDIR = ../splash
+SPLASHLIBDIR = ../splash
 
-
-CXXFLAGS += $(DEBUG) -DHAVE_DIRENT_H=1  -I.. -DHAVE_REWINDDIR=1 -DHAVE_POPEN=1   -I$(GOOSRCDIR) -I$(SRCDIR) -I$(XPDFSRCDIR) 
+CXXFLAGS = -g -O2 -DHAVE_CONFIG_H -DHAVE_DIRENT_H=1  -I.. -DHAVE_REWINDDIR=1 -DHAVE_POPEN=1 -I.. -I$(GOOSRCDIR) -I$(XPDFSRCDIR) -I$(FOFISRCDIR) -I$(SPLASHSRCDIR) -I$(srcdir)           -I/usr/X11R6/include
 
 LDFLAGS = 
 
@@ -44,13 +45,11 @@ all: pdftohtml$(EXE)
 
 PDFTOHTML_OBJS = HtmlOutputDev.o HtmlFonts.o HtmlLinks.o \
     pdftohtml.o
-PDFTOHTML_LIBS = -L$(GOOLIBDIR) -L$(XPDFLIBDIR) $(OTHERLIBS) -lXpdf -lGoo -lm
+PDFTOHTML_LIBS = -L$(GOOLIBDIR) -L$(FOFILIBDIR) -L$(SPLASHLIBDIR) -L$(XPDFLIBDIR) $(OTHERLIBS) -lXpdf -lGoo -lfofi -lsplash -lm
 
-pdftohtml$(EXE): $(PDFTOHTML_OBJS) $(GOOLIBDIR)/$(LIBPREFIX)Goo.a \
-	$(XPDFLIBDIR)/$(LIBPREFIX)Xpdf.a
+pdftohtml$(EXE): $(PDFTOHTML_OBJS) $(GOOLIBDIR)/$(LIBPREFIX)Goo.a
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o pdftohtml$(EXE) $(PDFTOHTML_OBJS) \
 		$(PDFTOHTML_LIBS)
-
 
 #-------------------------------------------------------------------------
 clean:

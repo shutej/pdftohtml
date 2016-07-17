@@ -56,15 +56,16 @@ Catalog::Catalog(XRef *xrefA) {
     goto err2;
   }
   pagesDict.dictLookup("Count", &obj);
-  if (!obj.isInt()) {
+  // some PDF files actually use real numbers here ("/Count 9.0")
+  if (!obj.isNum()) {
     error(-1, "Page count in top-level pages object is wrong type (%s)",
 	  obj.getTypeName());
     goto err3;
   }
-  pagesSize = numPages0 = obj.getInt();
+  pagesSize = numPages0 = (int)obj.getNum();
   obj.free();
-  pages = (Page **)gmalloc(pagesSize * sizeof(Page *));
-  pageRefs = (Ref *)gmalloc(pagesSize * sizeof(Ref));
+  pages = (Page **)gmallocn(pagesSize, sizeof(Page *));
+  pageRefs = (Ref *)gmallocn(pagesSize, sizeof(Ref));
   for (i = 0; i < pagesSize; ++i) {
     pages[i] = NULL;
     pageRefs[i].num = -1;
@@ -104,6 +105,9 @@ Catalog::Catalog(XRef *xrefA) {
   // get the outline dictionary
   catDict.dictLookup("Outlines", &outline);
 
+  // get the AcroForm dictionary
+  catDict.dictLookup("AcroForm", &acroForm);
+
   catDict.free();
   return;
 
@@ -138,6 +142,7 @@ Catalog::~Catalog() {
   metadata.free();
   structTreeRoot.free();
   outline.free();
+  acroForm.free();
 }
 
 GString *Catalog::readMetadata() {
@@ -190,8 +195,8 @@ int Catalog::readPageTree(Dict *pagesDict, PageAttrs *attrs, int start) {
       }
       if (start >= pagesSize) {
 	pagesSize += 32;
-	pages = (Page **)grealloc(pages, pagesSize * sizeof(Page *));
-	pageRefs = (Ref *)grealloc(pageRefs, pagesSize * sizeof(Ref));
+	pages = (Page **)greallocn(pages, pagesSize, sizeof(Page *));
+	pageRefs = (Ref *)greallocn(pageRefs, pagesSize, sizeof(Ref));
 	for (j = pagesSize - 32; j < pagesSize; ++j) {
 	  pages[j] = NULL;
 	  pageRefs[j].num = -1;
@@ -215,7 +220,6 @@ int Catalog::readPageTree(Dict *pagesDict, PageAttrs *attrs, int start) {
     } else {
       error(-1, "Kid object (page %d) is wrong type (%s)",
 	    start+1, kid.getTypeName());
-      goto err2;
     }
     kid.free();
   }
@@ -307,8 +311,8 @@ Object *Catalog::findDestInTree(Object *tree, GString *name, Object *obj) {
 	} else if (cmp < 0) {
 	  done = gTrue;
 	}
-	name1.free();
       }
+      name1.free();
     }
     names.free();
     if (!found)
